@@ -1,0 +1,3 @@
+[submodule "cheriot-rtos"]
+	path = cheriot-rtos
+	url = https://github.com/microsoft/cheriot-rtos
