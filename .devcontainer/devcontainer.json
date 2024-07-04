@@ -1,0 +1,22 @@
+{
+  "image": "ghcr.io/cheriot-platform/devcontainer:latest",
+  "remoteUser": "cheriot",
+  "containerUser": "cheriot",
+  "onCreateCommand": "git config --global --add safe.directory /workspaces/cheriot-demos && git submodule update --init --recursive",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+          "llvm-vs-code-extensions.vscode-clangd",
+          "tboox.xmake-vscode",
+          "hnw.vscode-auto-open-markdown-preview"
+      ],
+      "settings": {
+        "clangd.path": "/cheriot-tools/bin/clangd",
+        "xmake.compileCommandsDirectory": "${workspaceRoot}",
+        "xmake.workingDirectory": "${workspaceRoot}/tests",
+        "xmake.additionalConfigArguments": "--sdk=/cheriot-tools/"
+      }
+    }
+  }
+}
+
