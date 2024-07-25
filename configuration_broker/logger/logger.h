@@ -1,12 +1,12 @@
-// Copyright Configured Things and CHERIoT Contributors.
+// Copyright Configured Things Ltd and CHERIoT Contributors.
 // SPDX-License-Identifier: MIT
 
-#pragma once
+#include <stdlib.h>
 
-#include <cstdlib>
-
-// Mocked example of configuration data for a remote
-// logging service
+/**
+ * Contrived example of configuration data for a remote
+ * logging service.
+ */
 
 enum class logLevel
 {
@@ -28,6 +28,8 @@ struct LoggerConfig
 	logLevel level; // required logging level
 };
 
-// Function which nominally configures the logger
-// In this demo it just prints the config value
+/**
+ * Function which nominally configures the logger
+ * In this demo it just prints the config value.
+ */
 void __cheri_libcall logger_config(void *config);

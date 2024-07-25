@@ -1,4 +1,4 @@
--- Copyright Configred Things and CHERIoT Contributors.
+-- Copyright Configured Things Ltd and CHERIoT Contributors.
 -- SPDX-License-Identifier: MIT
 
 
@@ -13,6 +13,12 @@ includes(path.join(sdkdir, "lib/freestanding"),
 
 option("board")
     set_default("ibex-safe-simulator")
+
+-- library for JSON parser   
+library("json_parser")
+    set_default(false)
+    add_files("json_parser/json_parser.cc")
+    add_files("json_parser/core_json.cc")
 
 -- Library for Mocked logger service
 library("logger")
@@ -43,10 +49,15 @@ compartment("config_broker")
 compartment("provider")
     add_files("provider/provider.cc")
 
--- Configuration JSON parser sandbox
-compartment("parser")
-    add_files("parser/parser.cc")
-    add_files("parser/core_json.cc")
+-- Configuration JSON parser sandboxes
+compartment("parser_logger")
+    add_files("parser/parse_logger.cc")
+
+compartment("parser_rgb_led")
+    add_files("parser/parse_rgb_led.cc")
+
+compartment("parser_user_led")
+    add_files("parser/parse_user_led.cc")
 
 -- Consumers
 compartment("consumer1")
@@ -58,6 +69,7 @@ compartment("consumer2")
 firmware("config-broker-ibex-sim")
     add_deps("freestanding", "debug", "string")
     -- libraries
+    add_deps("json_parser")
     add_deps("logger")
     add_deps("rgb_led")
     add_deps("user_led")
@@ -65,7 +77,9 @@ firmware("config-broker-ibex-sim")
     add_deps("mqtt")
     add_deps("provider")
     add_deps("config_broker")
-    add_deps("parser")
+    add_deps("parser_logger")
+    add_deps("parser_rgb_led")
+    add_deps("parser_user_led")
     add_deps("consumer1")
     add_deps("consumer2")
     on_load(function(target)

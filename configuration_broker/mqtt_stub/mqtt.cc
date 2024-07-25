@@ -1,43 +1,45 @@
-// Copyright Configured Things and CHERIoT Contributors.
+// Copyright Configured Things Ltd and CHERIoT Contributors.
 // SPDX-License-Identifier: MIT
 
-//
-// Fake MQTT server that periodically "publishes"
-// messages where the data is a json string
-//
+/**
+ * Fake MQTT server that periodically "publishes"
+ * messages where the data is a json string
+ */
 
-// Examles of input in JSON
-//
-// topic: logger
-// -------------
-// {
-//   host: {
-//     address: "x.x.x.x",
-//     port: 400
-//   },
-//   level: "info"
-// }
-//
-// topic: rgbled
-// -------------
-// {
-//   led0: {red: 100, green: 100, blue: 100},
-//   led1: {red: 200, green: 200, blue: 200},
-// }
-//
-// topic: userled
-// --------------
-// {
-//   led0: 'on',
-//   led1: 'off',
-//   led2: 'ON',
-//   led3: 'OFF',
-//   led4: 'Off',
-//   led5: 'On',
-//   led6: 'off',
-//   led7: 'On'
-// }
-//
+/*
+ * Examples of input in JSON
+ *
+ * topic: logger
+ * -------------
+ * {
+ *   host: {
+ *     address: "x.x.x.x",
+ *     port: 400
+ *   },
+ *   level: "info"
+ * }
+ *
+ * topic: rgbled
+ * -------------
+ * {
+ *   led0: {red: 100, green: 100, blue: 100},
+ *   led1: {red: 200, green: 200, blue: 200},
+ * }
+ *
+ * topic: userled
+ * --------------
+ * {
+ *   led0: 'on',
+ *   led1: 'off',
+ *   led2: 'ON',
+ *   led3: 'OFF',
+ *   led4: 'Off',
+ *   led5: 'On',
+ *   led6: 'off',
+ *   led7: 'On'
+ * }
+ *
+ */
 
 #include "cdefs.h"
 #include <compartment.h>
@@ -51,96 +53,110 @@
 // Expose debugging features unconditionally for this compartment.
 using Debug = ConditionalDebug<true, "MQTT">;
 
-struct Message
+namespace
 {
-	const char *description;
-	int         expected;
-	const char *topic;
-	const char *json;
-};
 
-// Set of messages to publish in a continual loop
-const Message Messages[] = {
+	/**
+	 * Define a test message
+	 */
+	struct Message
+	{
+		const char *description;
+		int         expected;
+		const char *topic;
+		const char *json;
+	};
 
-  // Valid RGB LED config
-  {"Valid RGB LED config",
-   0,
-   "rgbled",
-   "{\"led0\":{\"red\":0,   \"green\":86,  \"blue\":164},"
-   " \"led1\":{\"red\":255, \"green\":200, \"blue\":200}}"},
+	// Set of messages to publish.
+	const Message Messages[] = {
 
-  // Valid Logger config - log level Info
-  {"Valid Logger config (Info)",
-   0,
-   "logger",
-   "{\"host\": "
-   "{\"address\":\"100.101.102.103\",\"port\":666},\"level\":\"info\"}"},
+	  // Valid RGB LED config
+	  {"Valid RGB LED config",
+	   0,
+	   "rgbled",
+	   "{\"led0\":{\"red\":0,   \"green\":86,  \"blue\":164},"
+	   " \"led1\":{\"red\":255, \"green\":200, \"blue\":200}}"},
 
-  // Valid logger config - log level Warn
-  {"Valid Logger config (Warn)",
-   0,
-   "logger",
-   "{\"host\": "
-   "{\"address\":\"100.101.102.103\",\"port\":666},\"level\":\"warn\"}"},
+	  // Valid Logger config - log level Info
+	  {"Valid Logger config (Info)",
+	   0,
+	   "logger",
+	   "{\"host\": "
+	   "{\"address\":\"100.101.102.103\",\"port\":666},\"level\":\"info\"}"},
 
-  // Invalid Logger config - bad port value
-  {"Invalid Logger config (bad port)",
-   -EINVAL,
-   "logger",
-   "{\"host\": "
-   "{\"address\":\"100.101.102.103\",\"port\":\"xxx\"},\"level\":\"debug\"}"},
+	  // Valid logger config - log level Warn
+	  {"Valid Logger config (Warn)",
+	   0,
+	   "logger",
+	   "{\"host\": "
+	   "{\"address\":\"100.101.102.103\",\"port\":666},\"level\":\"warn\"}"},
 
-  // Valid User LED config
-  {"Valid User LED config",
-   0,
-   "userled",
-   "{\"led0\":\"on\",\"led1\":\"off\",\"led2\":\"ON\",\"led3\":\"OFF\","
-   " \"led4\":\"On\",\"led5\":\"Off\",\"led6\":\"on\",\"led7\":\"off\"}"},
+	  // Invalid Logger config - bad port value
+	  {"Invalid Logger config (bad port)",
+	   -EINVAL,
+	   "logger",
+	   "{\"host\": "
+	   "{\"address\":\"100.101.102.103\",\"port\":\"xxx\"},\"level\":"
+	   "\"debug\"}"},
 
-  // Invalid Logger config - invalid Json
-  {"Invalid Logger config (bad JSON)", -EINVAL, "logger", "{\"x\":"},
+	  // Valid User LED config
+	  {"Valid User LED config",
+	   0,
+	   "userled",
+	   "{\"led0\":\"on\",\"led1\":\"off\",\"led2\":\"ON\",\"led3\":\"OFF\","
+	   " \"led4\":\"On\",\"led5\":\"Off\",\"led6\":\"on\",\"led7\":\"off\"}"},
 
-  // Valid RGB LED config
-  {"Valid RGB LED config",
-   0,
-   "rgbled",
-   "{\"led1\":{\"red\":0,  \"green\":86, \"blue\":164},"
-   " \"led0\":{\"red\":255,\"green\":200,\"blue\":200}}"},
+	  // Invalid Logger config - invalid Json
+	  {"Invalid Logger config (bad JSON)", -EINVAL, "logger", "{\"x\":"},
 
-  // Valid User LED config
-  {"Valid User LED config",
-   0,
-   "userled",
-   "{\"led0\":\"OFF\",\"led1\":\"ON\",\"led2\":\"off\",\"led3\":\"on\","
-   " \"led4\":\"Off\",\"led5\":\"On\",\"led6\":\"off\",\"led7\":\"on\"}"},
+	  // Valid RGB LED config
+	  {"Valid RGB LED config",
+	   0,
+	   "rgbled",
+	   "{\"led1\":{\"red\":0,  \"green\":86, \"blue\":164},"
+	   " \"led0\":{\"red\":255,\"green\":200,\"blue\":200}}"},
 
-  // Invalid RGB LED config
-  {"Invalid RGB LED config",
-   -EINVAL,
-   "rgbled",
-   "{\"led0\":{\"red\":0,  \"green\":286,\"blue\":400},"
-   " \"led1\":{\"red\":255,\"green\":200,\"blue\":200}}"},
+	  // Valid User LED config
+	  {"Valid User LED config",
+	   0,
+	   "userled",
+	   "{\"led0\":\"OFF\",\"led1\":\"ON\",\"led2\":\"off\",\"led3\":\"on\","
+	   " \"led4\":\"Off\",\"led5\":\"On\",\"led6\":\"off\",\"led7\":\"on\"}"},
 
-  // Invalid Logger config - invalid log level
-  {"Invalid Logger config (bad level)",
-   -EINVAL,
-   "logger",
-   "{\"host\": "
-   "{\"address\":\"100.101.102.103\",\"port\":666},\"level\":\"thing\"}"},
+	  // Invalid RGB LED config
+	  {"Invalid RGB LED config",
+	   -EINVAL,
+	   "rgbled",
+	   "{\"led0\":{\"red\":0,  \"green\":286,\"blue\":400},"
+	   " \"led1\":{\"red\":255,\"green\":200,\"blue\":200}}"},
 
-  // Invalid Logger config - oversized host address which will trigger a bounds
-  // violation
-  {"Invalid Logger config (overflow)",
-   -EINVAL,
-   "logger",
-   "{\"host\": {\"address\":\"buffer overflow attack via a very long "
-   "address\",\"port\":666},\"level\":\"info\"}"},
+	  // Invalid Logger config - invalid log level
+	  {"Invalid Logger config (bad level)",
+	   -EINVAL,
+	   "logger",
+	   "{\"host\": "
+	   "{\"address\":\"100.101.102.103\",\"port\":666},\"level\":\"thing\"}"},
 
-};
+	  // Invalid Logger config - oversized host address which will trigger a
+	  // bounds
+	  // violation
+	  {"Invalid Logger config (overflow)",
+	   -EINVAL,
+	   "logger",
+	   "{\"host\": {\"address\":\"buffer overflow attack via a very long "
+	   "address\",\"port\":666},\"level\":\"info\"}"},
 
-//
-// Thread Entry point for the MQTT stub
-//
+	};
+
+} // namespace
+
+/**
+ * Thread Entry point for the MQTT stub.  The thread "publishes" each message by
+ * calling the Provider's UpdateConfig() method as if the Provider has
+ * subscribed to the topics.  It then waits a short time before publishing the
+ * next message. After all the messages has been sent it sends two further
+ * messages in quick succession to show the rate limiting in operation.
+ */
 void __cheri_compartment("mqtt") init()
 {
 	for (auto &m : Messages)
@@ -161,9 +177,9 @@ void __cheri_compartment("mqtt") init()
 	auto res = updateConfig(m.topic, m.json);
 	Debug::Assert(res == 0, "Unexpected result {}", res);
 
-	Debug::log("------- Update RGB LED --------");
+	Debug::log("------- Update RGB LED too quickly --------");
 	res = updateConfig(m.topic, m.json);
 	Debug::Assert(res == -EBUSY, "Unexpected result {}", res);
 
-	Debug::log("\n---- Finshed ----");
+	Debug::log("\n---- Finished ----");
 };

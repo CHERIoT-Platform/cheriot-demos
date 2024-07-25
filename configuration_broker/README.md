@@ -1,9 +1,9 @@
 Safe Configuration Management
 =============================
 
-Contributed by ConfiguredThings Ltd
+Contributed by Configured Things Ltd
 
-All system rely on some form of configuration data, and the configuration interface is a significant part of the attack surface.
+All systems rely on some form of configuration data, and the configuration interface is a significant part of the attack surface.
 Misconfiguration, whether accidental or malicious, is one of the main sources of security vulnerabilities.
 Purely immutable systems, where configuration is baked in at build time, may work for container based environments where re-deployment is relatively easy but are not an option for embedded systems.  
 The solution in many cases is to create an often complex trust model around and within the configuration system to limit and control configuration changes, where the complexity itself adds to the risk profile. 
@@ -26,7 +26,7 @@ Providing a generic broker and expressing the trust model via its interfaces mak
 ## Overview
 
 Each item of configuration data has a name, a value, and a version.
-New values are supplied as serialised JSON and parsed into a corresponding data strut. 
+New values are supplied as serialised JSON and parsed into a corresponding data structure. 
 
 There are four main roles:
 * Providers are authorised to supply the values for one or more items.
@@ -39,16 +39,33 @@ All operations take place on a thread calling into the Broker, and it only calls
 Providers, Consumers, and Parsers are assigned their rights via Static Sealed Capabilities, which only the Broker can unseal.
 This means this aspect is fixed at build time and is auditable.
 
-<img src=doc/broker.svg>
+```mermaid
+block-beta
+    columns 5
+    mqtt("MQTT") space:4
+    space:4 consumer#1("Consumer #1")
+    provider("Provider") space broker("Broker") space:2
+    space:4 consumer#2("Consumer #2")
+    space:5
+    space:1 parser#1("Parser #1") parser#2("Parser #2") parser#3("Parser #3") 
+    
+    mqtt --> provider
+    provider-- "set" -->broker
+    consumer#1-- "get" -->broker
+    consumer#2-- "get" -->broker
+    broker-- "parse" -->parser#1
+    broker-- "parse" -->parser#2
+    broker-- "parse" -->parser#3
+```
 
-The model can be thought of as similar to a pub/sub architecture with a single retained message for each item and a security policy defined at build time through static sealed capabilities.
+The model can be thought of as similar to a pub/sub architecture with a single retained message for each item and a security policy for clients defined at build time through static sealed capabilities.
 The configuration data is declarative so there is no need or value in maintaining a full sequence of updates; each new version is a complete definition of the required configuration item. 
 Aligned with the pub/sub model publishing items and subscribing for items can happen in any sequence; a consumer will receive any data that is already published, and any subsequent updates.
 This avoids any timing issues during system startup.
 
 In the demo new values are provided as serialised JSON strings, with each item coming from a specific topic from a (not included) MQTT Broker.
-The Provider is in effect a simply an authorised mapping between the topics and configuration items.
-The Parser and Consumers contain code which is specific to each item.
+The Provider is in effect simply an authorised mapping between the topics and configuration items.
+The Parsers and Consumers contain code which is specific to each item.
 The Broker is agnostic to the details of configuration items, and has no prior knowledge of which items exist.
 
 ### Interactions and Trust Model
@@ -57,10 +74,10 @@ Because the Broker provides an abstraction between Providers, Consumers and Pars
 #### Parsers
 The parsers have the key role of converting untrusted data received from the network into verified and trusted configuration values.
 In traditional systems parsers are vulnerable to a range of attacks such as injection and buffer overflow.
-Using Cheriot each parser runs as stateless method (using heap controls) in a sandbox compartment that ensure that any issues are contained to failing only the current parse operation.
-Parsers are given a static sealed capability for each item type they are allowed to parser, which includes two properties of the item.
+Using CHERIoT each parser runs as a stateless method (using heap controls) in its own a sandbox compartment which ensures that any issues are contained to failing only the current parse operation.
+Parsers are given a static sealed capability for each item type they are allowed to parse, which includes two properties of the item.
 * The size of the object they will produce.
-* The minimum interval in mS between updates.
+* The minimum interval in milliseconds between updates.
 They use this to register with the Broker, which is the only compartment that can unseal the capability.
 The Broker will only call registered parsers, which are passed as cheri_callbacks so they are not callable by any other compartment.
 The Broker only passes non global capabilities to the Parser, so the Parser is unable to capture them.
@@ -70,6 +87,10 @@ If the parsing of the new value results in access beyond this size then that wil
 
 The interval reflects that parsing an object and/or applying updates can can be expensive tasks, and protects against DoS attacks from a compromised Provider.
 The Broker will reject without attempting to parse any updates that are made less that min_interval since the last attempt. 
+
+Parsers that can run without any heap interaction could be co-located in the same sandbox.
+In the demo we use a combination of a CHERIoT library wrapper to coreJSON from FreeRTOS and magic_emun, which requires a small amount of heap manipulation.
+Running each parser in its own sandbox compartment with a small heap quota prevents any risk of interaction between the different configuration item types even if there is some persistent heap based attack on the parser.  
 
 ##### Integrity
 The Broker trusts that the Parser will correctly populate the object, but this can be established by code inspection & testing.
@@ -118,7 +139,7 @@ The Provider is trusting the Broker, and indirectly the Parser, not to block its
 Consumers have one or more READ_CONFIG_CAPABILITY(s) that define which items they are allowed to receive.
 
 Consumers can request the current value at any time by passing their sealed capability to the Broker.
-In return they receive a struct with four values:
+In return they receive a data structure with four values:
 * The name of the item. 
 * A read only pointer the current data value (which maybe null if it hasn't been set yet).
 * The current version.
@@ -196,12 +217,94 @@ A single Provider act as the MQTT client and maps the messages against its set o
 
 There are two Consumers in the demo, each implemented as separate compartments.
 
-Consumer #1 is authorised to receive the RGD LED configuration.
+Consumer #1 is authorised to receive the RGB LED configuration.
 Consumer #2 is authorised to receive the User LED configuration.
 Both consumers are authorised to receive the Logger configuration.  
 
-A thread is stared in each consumer which waits for new versions to become available and then, to keep the demo h/w agnostic, makes a library call to print the received value.
+A thread is started in each consumer which waits for new versions to become available and then, to keep the demo h/w agnostic, makes a library call to print the received value.
 
+The following sequence diagram shows the flow of the threads across the compartments. 
+
+```mermaid
+sequenceDiagram
+  participant MQTT
+  participant Provider
+  participant Parser as Parser(s)
+  participant Broker as Config Broker
+  participant Futex as Version Futex
+  participant Consumer as Consumer(s)
+
+  activate Consumer
+  Consumer ->> Broker : get()
+  
+  deactivate Consumer
+  activate Broker
+  Broker ->>+ Consumer: (version, data, futex)
+  
+  deactivate Broker
+  activate Consumer
+  Consumer ->> Futex : wait()
+
+  activate Futex
+  deactivate Consumer
+
+  activate MQTT
+  MQTT ->> Provider: (topic, json)
+  deactivate MQTT
+
+  activate Provider
+  Provider ->> Broker: set()
+  deactivate Provider
+
+  activate Broker
+  Broker->> Parser: init() <on first get>
+  deactivate Broker
+
+  activate Parser
+  Parser ->> Broker : register()
+  deactivate Parser
+
+  activate Broker
+  Broker->> Parser: parse()
+  deactivate Broker
+
+  activate Parser
+  Parser ->> Broker : data
+  deactivate Parser
+
+  activate Broker
+  Broker->> Futex: version++
+
+  Futex ->> Consumer: wake()
+  deactivate Futex
+  activate Consumer
+
+  Broker ->> Provider : 
+  deactivate Broker
+
+  activate Provider
+  Provider ->> MQTT : 
+  deactivate Provider
+  activate MQTT
+
+  Consumer ->> Broker : get()
+  deactivate Consumer
+  activate Broker
+  
+  Broker ->> Consumer: (version, data, futex)
+  deactivate Broker
+  activate Consumer
+
+  Consumer ->> Futex : wait()
+  deactivate Consumer
+  activate Futex
+
+  MQTT ->> MQTT : sleep()
+  MQTT ->> Provider: (topic, json)
+  deactivate MQTT
+
+
+```
 The demo uses the "ibex-safe-simulator" board as its target, since this provides a realtime clock.
 This allows the Provider to sleep between messages giving the Consumers a chance to run.    
 
