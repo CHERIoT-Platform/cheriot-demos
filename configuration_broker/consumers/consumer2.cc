@@ -25,67 +25,81 @@ using Debug = ConditionalDebug<true, "Consumer #2">;
 #include "../logger/logger.h"
 #include "../user_led/user_led.h"
 
-// Keep track of the items, which version we have, and the
-// handler for updates
-struct Config
+namespace
 {
-	SObj                   capability; // Sealed Read Capability
-	uint32_t               version;
-	std::atomic<uint32_t> *versionFutex;
-	int (*handler)(void *); // Handler to call
-};
-
-int logger_handler(void *newConfig)
-{
-	static LoggerConfig *config;
-
-	// Claim the config against our heap quota to ensure
-	// it remains available, as the broker will free it
-	// when it gets a new value.
-	if (heap_claim(MALLOC_CAPABILITY, newConfig) == 0)
+	/**
+	 * Keep track of the items, which version we have, and the
+	 * handler for updates
+	 */
+	struct Config
 	{
-		Debug::log("Failed to claim {}", newConfig);
-		return -1;
+		SObj                   capability; // Sealed Read Capability
+		uint32_t               version;
+		std::atomic<uint32_t> *versionFutex;
+		int (*handler)(void *); // Handler to call
+	};
+
+	/**
+	 * Handle updates to the logger configuration
+	 */
+	int logger_handler(void *newConfig)
+	{
+		static LoggerConfig *config;
+
+		// Claim the config against our heap quota to ensure
+		// it remains available, as the broker will free it
+		// when it gets a new value.
+		if (heap_claim(MALLOC_CAPABILITY, newConfig) == 0)
+		{
+			Debug::log("Failed to claim {}", newConfig);
+			return -1;
+		}
+
+		auto oldConfig = config;
+		config         = static_cast<LoggerConfig *>(newConfig);
+		logger_config(config);
+		if (oldConfig)
+		{
+			free(oldConfig);
+		}
+		return 0;
 	}
 
-	auto oldConfig = config;
-	config         = static_cast<LoggerConfig *>(newConfig);
-	logger_config(config);
-	if (oldConfig)
+	/**
+	 * Handle updates to the User LED configuration
+	 */
+	int user_led_handler(void *newConfig)
 	{
-		free(oldConfig);
+		// Claim the config against our heap quota to ensure
+		// it remains available, as the broker will free it
+		// when it gets a new value.
+		//
+		// The call to configure the led might be into another
+		// compartment so we can't rely on the fast claim
+		if (heap_claim(MALLOC_CAPABILITY, newConfig) == 0)
+		{
+			Debug::log("Failed to claim {}", newConfig);
+			return -1;
+		}
+
+		// Configure the controller
+		auto config = static_cast<userLed::Config *>(newConfig);
+		user_led_config(config);
+
+		// We can assume the controller has used these values
+		// now so just release our claim on the config
+		free(newConfig);
+
+		return 0;
 	}
-	return 0;
-}
 
-int user_led_handler(void *newConfig)
-{
-	// Claim the config against our heap quota to ensure
-	// it remains available, as the broker will free it
-	// when it gets a new value.
-	//
-	// The call to configure the led might be into another
-	// compartment so we can't rely on the fast claim
-	if (heap_claim(MALLOC_CAPABILITY, newConfig) == 0)
-	{
-		Debug::log("Failed to claim {}", newConfig);
-		return -1;
-	}
+} // namespace
 
-	// Configure the controller
-	auto config = static_cast<User_LED_Config *>(newConfig);
-	user_led_config(config);
-
-	// We can assume the controller has used these values
-	// now so just release our claim on the config
-	free(newConfig);
-
-	return 0;
-}
-
-//
-// Thread entry point.
-//
+/**
+ * Thread entry point.  The waits for changes to one
+ * or more configuration values and then calls the
+ * appropriate handler.
+ */
 void __cheri_compartment("consumer2") init()
 {
 	// List of configuration items we are tracking
@@ -95,6 +109,10 @@ void __cheri_compartment("consumer2") init()
 	};
 
 	auto numOfItems = sizeof(configItems) / sizeof(configItems[0]);
+
+	// Just for the demo keep track of the number to timeouts to give
+	// a clean exit
+	uint16_t num_timeouts = 0;
 
 	// Create the multi waiter
 	struct MultiWaiter *mw = nullptr;
@@ -190,7 +208,16 @@ void __cheri_compartment("consumer2") init()
 		Timeout t{MS_TO_TICKS(10000)};
 		if (multiwaiter_wait(&t, mw, events, 2) != 0)
 		{
-			Debug::log("thread {} wait timeout", thread_id_get());
+			num_timeouts++;
+			Debug::log(
+			  "thread {} wait timeout {}", thread_id_get(), num_timeouts);
+			// For the demo exit the thread when we stop getting updates
+			if (num_timeouts >= 2)
+				break;
+		}
+		else
+		{
+			num_timeouts = 0;
 		}
 	}
 }

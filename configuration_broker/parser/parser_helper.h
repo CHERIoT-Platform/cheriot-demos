@@ -1,4 +1,4 @@
-// Copyright Configured Things and CHERIoT Contributors.
+// Copyright Configured Things Ltd and CHERIoT Contributors.
 // SPDX-License-Identifier: MIT
 #pragma once
 
@@ -7,28 +7,29 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "./core_json.h"
+#include "../json_parser/json_parser.h"
 
-// /////////////////////////////////////////////
-//
-// Helper functions for extracting types from JSON
-//
-// /////////////////////////////////////////////
+/**
+ *
+ * A collection of helper functions for extracting
+ * different types from a JSON string by path.
+ *
+ */
 
-//
-// Helper function to extract a string value
-//
+/**
+ * Extract a string value.
+ */
 bool get_string(const char *json, const char *key, char *dst)
 {
 	char  *value;
 	size_t valueLength;
 
-	auto result = JSON_Search((char *)json,
-	                          strlen(json),
-	                          (char *)key,
-	                          strlen(key),
-	                          &value,
-	                          &valueLength);
+	auto result = jsonParser::search((char *)json,
+	                                 strlen(json),
+	                                 (char *)key,
+	                                 strlen(key),
+	                                 &value,
+	                                 &valueLength);
 
 	if (result != JSONSuccess)
 	{
@@ -41,21 +42,24 @@ bool get_string(const char *json, const char *key, char *dst)
 	return true;
 }
 
-//
-// Helper function to extract a number value
-//
+/**
+ * Function template to extract a number value. If after
+ * assignment *dst doesn't equal the value we tried to save
+ * then we assume that the value has overflowed and is not
+ * valid for the type.
+ */
 template<class T>
 bool get_number(const char *json, const char *key, T *dst)
 {
 	char  *value;
 	size_t valueLength;
 
-	auto result = JSON_Search((char *)json,
-	                          strlen(json),
-	                          (char *)key,
-	                          strlen(key),
-	                          &value,
-	                          &valueLength);
+	auto result = jsonParser::search((char *)json,
+	                                 strlen(json),
+	                                 (char *)key,
+	                                 strlen(key),
+	                                 &value,
+	                                 &valueLength);
 
 	if (result != JSONSuccess)
 	{
@@ -97,21 +101,23 @@ bool get_number(const char *json, const char *key, T *dst)
 	return true;
 }
 
-//
-// Helper function to extract an enum from a string
-//
+/**
+ * Extract an enum value based on it's string representation
+ * using magic enum. The value in JSON is treated as being
+ * case insensitive.
+ */
 template<class T>
 bool get_enum(const char *json, const char *key, T *dst)
 {
 	char  *value;
 	size_t valueLength;
 
-	auto result = JSON_Search((char *)json,
-	                          strlen(json),
-	                          (char *)key,
-	                          strlen(key),
-	                          &value,
-	                          &valueLength);
+	auto result = jsonParser::search((char *)json,
+	                                 strlen(json),
+	                                 (char *)key,
+	                                 strlen(key),
+	                                 &value,
+	                                 &valueLength);
 
 	if (result != JSONSuccess)
 	{
