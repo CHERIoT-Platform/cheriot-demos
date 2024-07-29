@@ -221,7 +221,9 @@ int __cheri_compartment("config_broker")
 	// value, so just track through a readOnly capability
 	CHERI::Capability roData{newData};
 	roData.permissions() &=
-	  roData.permissions().without(CHERI::Permission::Store);
+	  roData.permissions().without(CHERI::Permission::Store) & 
+	  roData.permissions().without(CHERI::Permission::LoadStoreCapability)
+	  ;
 
 	// Keep track of the old value so we can free it
 	auto oldData = c->data;
