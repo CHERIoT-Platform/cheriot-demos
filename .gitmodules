@@ -1,3 +1,6 @@
 [submodule "cheriot-rtos"]
 	path = cheriot-rtos
 	url = https://github.com/microsoft/cheriot-rtos
+[submodule "network-stack"]
+	path = network-stack
+	url = https://github.com/CHERIoT-Platform/network-stack.git
