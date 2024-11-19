@@ -30,9 +30,3 @@ namespace userLed
 	};
 
 } // namespace userLed
-
-/**
- * Function which nominally configures the user LEDs
- * In this demo it just prints the config value
- */
-void __cheri_libcall user_led_config(void *config);

@@ -23,9 +23,3 @@ namespace rgbLed
 	};
 
 } // namespace rgbLed
-
-/**
- * Configure the LEDs
- * In this demo it just prints the config value
- */
-void __cheri_libcall rgb_led_config(void *config);

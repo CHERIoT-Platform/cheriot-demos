@@ -98,8 +98,6 @@ void __cheri_callback publishCallback(const char *topic,
 		const char *id       = topic + idOffset;
 		size_t      idLength = topicLength - idOffset;
 
-		Debug::log("extracted ID '{}'", std::string_view{id, idLength});
-
 		updateConfig(id, idLength, payload, payloadLength);
 	}
 	else

@@ -47,9 +47,7 @@ namespace
 /**
  * Parse a LoggerConfig struct.
  */
-int __cheri_callback parse_logger_config(const void *src,
-                                         size_t      srcLength,
-                                         void       *dst)
+int __cheri_callback parse_logger_config(const void *src, void *dst)
 {
 	auto *config    = static_cast<logger::Config *>(dst);
 	auto *srcConfig = static_cast<const logger::Config *>(src);

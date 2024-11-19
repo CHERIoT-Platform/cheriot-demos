@@ -19,17 +19,13 @@
 /**
  * Extract a string value.
  */
-bool get_string(const char *json, const char *key, char *dst)
+bool get_string(const char *json, size_t jsonLength, const char *key, char *dst)
 {
 	char  *value;
 	size_t valueLength;
 
-	auto result = jsonParser::search((char *)json,
-	                                 strlen(json),
-	                                 (char *)key,
-	                                 strlen(key),
-	                                 &value,
-	                                 &valueLength);
+	auto result = jsonParser::search(
+	  (char *)json, jsonLength, (char *)key, strlen(key), &value, &valueLength);
 
 	if (result != JSONSuccess)
 	{
@@ -49,17 +45,13 @@ bool get_string(const char *json, const char *key, char *dst)
  * valid for the type.
  */
 template<class T>
-bool get_number(const char *json, const char *key, T *dst)
+bool get_number(const char *json, size_t jsonLength, const char *key, T *dst)
 {
 	char  *value;
 	size_t valueLength;
 
-	auto result = jsonParser::search((char *)json,
-	                                 strlen(json),
-	                                 (char *)key,
-	                                 strlen(key),
-	                                 &value,
-	                                 &valueLength);
+	auto result = jsonParser::search(
+	  (char *)json, jsonLength, (char *)key, strlen(key), &value, &valueLength);
 
 	if (result != JSONSuccess)
 	{
@@ -107,17 +99,13 @@ bool get_number(const char *json, const char *key, T *dst)
  * case insensitive.
  */
 template<class T>
-bool get_enum(const char *json, const char *key, T *dst)
+bool get_enum(const char *json, size_t jsonLength, const char *key, T *dst)
 {
 	char  *value;
 	size_t valueLength;
 
-	auto result = jsonParser::search((char *)json,
-	                                 strlen(json),
-	                                 (char *)key,
-	                                 strlen(key),
-	                                 &value,
-	                                 &valueLength);
+	auto result = jsonParser::search(
+	  (char *)json, jsonLength, (char *)key, strlen(key), &value, &valueLength);
 
 	if (result != JSONSuccess)
 	{

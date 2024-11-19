@@ -32,10 +32,8 @@ namespace
 		uint32_t                  minTicks; // Min system ticks between updates
 		uint64_t                  nextUpdate; // Time of next valid update
 		FlagLockPriorityInherited lock; // lock to prevent concurrent changes
-		int                       __cheri_callback (*parser)(const void *src,
-                                       size_t      srcLength,
-                                       void       *dst);
-		InternalConfigitem       *next;
+		int __cheri_callback (*parser)(const void *src, void *dst);
+		InternalConfigitem *next;
 	};
 
 	/**
@@ -184,11 +182,16 @@ int __cheri_compartment("config_broker")
 	// to the parser so that it can't capture or change it. This
 	// also clears the Load/Store Capability (MC) permission which
 	// prevents capabilities being embedded in the source data.
+	//
+	// Set the bounds to the length of the source both to constrain
+	// it and to avoid having to pass it in as a separate value.
+	//
 	CHERI::Capability roSrc{src};
 	roSrc.permissions() &= {CHERI::Permission::Load};
+	roSrc.bounds() = srcLength;
 
 	// Call the parser
-	if (c->parser(roSrc, srcLength, woNewData) != 0)
+	if (c->parser(roSrc, woNewData) != 0)
 	{
 		Debug::log("Parser failed for {}", token->Name);
 		free(newData);
@@ -288,9 +291,9 @@ ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
 /**
  * Set the parser for a config item.
  */
-int __cheri_compartment("config_broker") set_parser(
-  SObj                 sealedCap,
-  __cheri_callback int parser(const void *src, size_t srcLength, void *dst))
+int __cheri_compartment("config_broker")
+  set_parser(SObj                 sealedCap,
+             __cheri_callback int parser(const void *src, void *dst))
 {
 	Debug::log(
 	  "thread {} set parser called with {}", thread_id_get(), sealedCap);

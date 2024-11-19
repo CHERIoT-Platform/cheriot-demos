@@ -32,9 +32,3 @@ namespace logger
 	};
 
 }; // namespace logger
-
-/**
- * Function which nominally configures the logger
- * In this demo it just prints the config value.
- */
-void __cheri_libcall logger_config(void *config);

@@ -40,7 +40,7 @@
 #include <magic_enum/magic_enum.hpp>
 
 // Expose debugging features unconditionally for this compartment.
-using Debug = ConditionalDebug<true, "Parser">;
+using Debug = ConditionalDebug<true, "RGB LED Parser">;
 
 #include "config/parser_helper.h"
 
@@ -54,13 +54,13 @@ DEFINE_PARSER_CONFIG_CAPABILITY(RGB_LED_CONFIG, sizeof(rgbLed::Config), 1800);
 /**
  * Parse a json string into an RGB LED Config struct.
  */
-int __cheri_callback parse_RGB_LED_config(const void *src,
-                                          size_t      jsonLength,
-                                          void       *dst)
+int __cheri_callback parse_RGB_LED_config(const void *src, void *dst)
 {
-	auto        *config = static_cast<rgbLed::Config *>(dst);
-	auto         json   = static_cast<const char *>(src);
-	JSONStatus_t result;
+	auto             *config     = static_cast<rgbLed::Config *>(dst);
+	auto              json       = static_cast<const char *>(src);
+	CHERI::Capability jsonCap    = {src};
+	size_t            jsonLength = jsonCap.bounds();
+	JSONStatus_t      result;
 
 	auto initial_quota = heap_quota_remaining(MALLOC_CAPABILITY);
 
@@ -74,17 +74,19 @@ int __cheri_callback parse_RGB_LED_config(const void *src,
 
 	// query the individual values and populate the config struct
 	bool parsed = true;
-	parsed = parsed && get_number<uint8_t>(json, "led0.red", &config->led0.red);
-	parsed =
-	  parsed && get_number<uint8_t>(json, "led0.green", &config->led0.green);
-	parsed =
-	  parsed && get_number<uint8_t>(json, "led0.blue", &config->led0.blue);
+	parsed      = parsed && get_number<uint8_t>(
+                         json, jsonLength, "led0.red", &config->led0.red);
+	parsed = parsed && get_number<uint8_t>(
+	                     json, jsonLength, "led0.green", &config->led0.green);
+	parsed = parsed && get_number<uint8_t>(
+	                     json, jsonLength, "led0.blue", &config->led0.blue);
 
-	parsed = parsed && get_number<uint8_t>(json, "led1.red", &config->led1.red);
-	parsed =
-	  parsed && get_number<uint8_t>(json, "led1.green", &config->led1.green);
-	parsed =
-	  parsed && get_number<uint8_t>(json, "led1.blue", &config->led1.blue);
+	parsed = parsed && get_number<uint8_t>(
+	                     json, jsonLength, "led1.red", &config->led1.red);
+	parsed = parsed && get_number<uint8_t>(
+	                     json, jsonLength, "led1.green", &config->led1.green);
+	parsed = parsed && get_number<uint8_t>(
+	                     json, jsonLength, "led1.blue", &config->led1.blue);
 
 	// Free any heap the parser might have left allocated.
 	// Calling heap_free_all() is quite expensive as it has to walk all

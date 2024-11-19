@@ -19,8 +19,3 @@ namespace systemConfig
 	};
 
 } // namespace systemConfig
-
-/**
- * Configure the systemConfig
- */
-void __cheri_libcall system_config(void *config);

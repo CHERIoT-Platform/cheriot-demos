@@ -49,9 +49,7 @@ namespace
 /**
  * Parse a json string into a LoggerConfig struct.
  */
-int __cheri_callback parse_system_config(const void *src,
-                                         size_t      srcSize,
-                                         void       *dst)
+int __cheri_callback parse_system_config(const void *src, void *dst)
 {
 	auto *config    = static_cast<systemConfig::Config *>(dst);
 	auto *srcConfig = static_cast<const systemConfig::Config *>(src);

@@ -134,6 +134,6 @@ ConfigItem __cheri_compartment("config_broker")
  * to a sandbox compartment as the data is not trusted at this
  * point.
  */
-int __cheri_compartment("config_broker") set_parser(
-  SObj                 configValidateCapability,
-  __cheri_callback int parse(const void *src, size_t srcLength, void *dst));
+int __cheri_compartment("config_broker")
+  set_parser(SObj                 configValidateCapability,
+             __cheri_callback int parse(const void *src, void *dst));
