@@ -42,8 +42,8 @@ static_assert(clientIDPrefix.size() < clientID.size());
 
 // MQTT network buffer sizes
 constexpr const size_t networkBufferSize    = 1024;
-constexpr const size_t incomingPublishCount = 20;
-constexpr const size_t outgoingPublishCount = 20;
+constexpr const size_t incomingPublishCount = 10;
+constexpr const size_t outgoingPublishCount = 10;
 
 // MQTT test broker: https://test.mosquitto.org/
 // Note: port 8883 is encrypted and unautenticated

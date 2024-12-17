@@ -14,7 +14,7 @@
 using Debug = ConditionalDebug<true, "Status">;
 
 // Publish a string to the status topic
-void publish(SObj mqtt, std::string topic, const char *status)
+void publish(SObj mqtt, std::string topic, const char *status, bool retain)
 {
 	// Use a capabaility with only Load
 	// permission so we can be sure the MQTT stack
@@ -29,7 +29,8 @@ void publish(SObj mqtt, std::string topic, const char *status)
 	                        topic.data(),
 	                        topic.size(),
 	                        roJSON,
-	                        strlen(status));
+	                        roJSON.bounds(),
+	                        retain);
 
 	if (ret < 0)
 	{
@@ -67,13 +68,14 @@ void send_status(SObj mqtt, std::string topic, systemConfig::Config *config)
 	  config->switches[5] ? 1 : 0,
 	  config->switches[6] ? 1 : 0,
 	  config->switches[7] ? 1 : 0);
-	publish(mqtt, topic, status);
+	publish(mqtt, topic, status, true);
 }
 
 void clear_status(SObj mqtt, std::string topic)
 {
-	char status = 0;
-	//snprintf(
-	//  status, sizeof(status) / sizeof(status[0]), "{\"Status\":\"Off\"}");
-	publish(mqtt, topic, &status);
+	char              status;
+	CHERI::Capability statusCap = {&status};
+	statusCap.bounds()          = 0;
+	Debug::log("clear status with {}", statusCap);
+	publish(mqtt, topic, statusCap, true);
 }
