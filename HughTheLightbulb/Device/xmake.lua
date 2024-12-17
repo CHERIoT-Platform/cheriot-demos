@@ -19,7 +19,7 @@ option("board")
 compartment("hugh")
   set_default(false)
   add_includedirs("../../network-stack/include")
-  add_deps("freestanding", "TCPIP", "NetAPI", "TLS", "Firewall", "SNTP", "MQTT", "time_helpers", "debug", "stdio")
+  add_deps("freestanding", "TCPIP", "NetAPI", "TLS", "Firewall", "SNTP", "DNS", "MQTT", "time_helpers", "debug", "stdio")
   add_files("mqtt.cc")
   -- LCD drivers
   add_files("third_party/display_drivers/core/lcd_base.c")
