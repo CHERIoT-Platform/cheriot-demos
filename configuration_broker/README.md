@@ -590,9 +590,35 @@ Threads #4 and #5 are the standard TCP and Firewall threads required by the Netw
 The network stack takes a lot of extra resources, so the example is built without IPv6 support.
 ```
 cd configuration_broker/sonata
-xmake
 xmake config --IPv6=n --sdk=/cheriot-tools/ -P .
+xmake
 xmake run
 ```
 
-The --system-id parameter can be used to give the build a determistic system id. 
+The system connects to the same public MQTT broker (test.mosquitto.org) used by the HughTheLightBulb demo. 
+By default the demo will create a random eight character string to use in the MQTT topics.
+The --system-id parameter can be passed to xmake config to give the build a determistic system id.
+```
+xmake config --IPv6=n --system-id=MySonata --sdk=/cheriot-tools/ -P .
+```
+
+Status is published to the topic
+sonata-config/Status/<Id>-<#>
+where <Id> is the generated or configured IS, and <#> is generated from switches 0 & 1 on the board.
+
+Configuration is set by publishing a JSON string to
+sonata-config/Config/<Id>-<#>/<config>
+where <config> is one of user_LED or RGB_LED
+
+for example:
+user_LED
+```+json
+{"led0":"On","led1":"Off","led2":"Off","led3":"Off","led4":"Off","led5":"On","led6":"Off","led7":"On"}
+```
+
+rbg_LED
+```+json
+{"led0":{"red":0,"green":40,"blue":40},"led1":{"red":50,"green":0,"blue":0}}
+```
+
+

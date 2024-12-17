@@ -17,6 +17,9 @@
         "xmake.additionalConfigArguments": "--sdk=/cheriot-tools/"
       }
     }
-  }
+  },
+  "mounts" : [
+    "source=/media/phil/SONATA,target=/mnt/SONATA,type=bind"
+  ]
 }
 
