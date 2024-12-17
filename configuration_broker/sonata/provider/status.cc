@@ -16,12 +16,14 @@ using Debug = ConditionalDebug<true, "Status">;
 // Publish a string to the status topic
 void publish(SObj mqtt, std::string topic, const char *status, bool retain)
 {
-	// Use a capabaility with only Load
+	// Use a capability with only Load
 	// permission so we can be sure the MQTT stack
 	// doesn't capture a pointer to our buffer
 	Timeout           t{MS_TO_TICKS(5000)};
 	CHERI::Capability roJSON{status};
 	roJSON.permissions() &= {CHERI::Permission::Load};
+	if (roJSON.bounds() > 0)
+		roJSON.bounds() = strlen(status);
 
 	auto ret = mqtt_publish(&t,
 	                        mqtt,

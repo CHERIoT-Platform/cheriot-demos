@@ -597,26 +597,35 @@ xmake run
 
 The system connects to the same public MQTT broker (test.mosquitto.org) used by the HughTheLightBulb demo. 
 By default the demo will create a random eight character string to use in the MQTT topics.
-The --system-id parameter can be passed to xmake config to give the build a determistic system id.
+The --system-id parameter can be passed to xmake config to give the build a deterministic system id.
 ```
 xmake config --IPv6=n --system-id=MySonata --sdk=/cheriot-tools/ -P .
 ```
 
+The system-id is combined with the value of switches 0 and 1 on the Sonata board to create the Config and Status topics.
+If the switches are changed the system clear its current status message, unsubscribe from the previous configuration topic, and re-subscribe and publish status to the new topics.
+This makes it possible for demo purposes to switch the board between different configurations using pre-published retained configuration messages without having to publish a new message each time.
+
 Status is published to the topic
-sonata-config/Status/<Id>-<#>
-where <Id> is the generated or configured IS, and <#> is generated from switches 0 & 1 on the board.
+
+    sonata-config/Status/\<Id\>-\<#\>
+
+where \<Id\> is the generated or configured system-id, and \<#>\ is generated from switches 0 & 1 on the board.
 
 Configuration is set by publishing a JSON string to
-sonata-config/Config/<Id>-<#>/<config>
-where <config> is one of user_LED or RGB_LED
 
-for example:
-user_LED
+    sonata-config/Config/\<Id\>-\<#\>/\<config\>
+
+where \<config\> is one of user_LED or RGB_LED
+
+For example:
+
+sonata-config/Config/MySonata-0/user_LED
 ```+json
 {"led0":"On","led1":"Off","led2":"Off","led3":"Off","led4":"Off","led5":"On","led6":"Off","led7":"On"}
 ```
 
-rbg_LED
+sonata-config/Config/MySonata-0/rbg_LED
 ```+json
 {"led0":{"red":0,"green":40,"blue":40},"led1":{"red":50,"green":0,"blue":0}}
 ```
