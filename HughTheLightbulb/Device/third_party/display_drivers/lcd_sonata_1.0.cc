@@ -1,55 +1,51 @@
 // Copyright lowRISC Contributors.
 // SPDX-License-Identifier: Apache-2.0
 
-#include "lcd.hh"
-#include <utility>
+#if SONATA >= 10000
+#	include "lcd.hh"
+#	include <platform-pwm.hh>
+#	include <platform-spi.hh>
+#	include <utility>
 
 template<typename T>
 using Cap = CHERI::Capability<T>;
 
 /**
- * Helper.  Returns a pointer to the SPI device.
+ * Helper. Returns a pointer to the SPI device.
  */
-[[nodiscard, gnu::always_inline]] static Cap<volatile SonataSpi> spi()
+[[nodiscard, gnu::always_inline]] static Cap<volatile SonataSpi::Lcd> spi()
 {
-	return MMIO_CAPABILITY(SonataSpi, spi1);
+	return MMIO_CAPABILITY(SonataSpi::Lcd, spi_lcd);
 }
 
 /**
- * Helper.  Returns a pointer to the GPIO device.
+ * Helper. Returns a pointer to the LCD's backlight PWM device.
  */
-[[nodiscard, gnu::always_inline]] static Cap<volatile SonataGPIO> gpio()
+[[nodiscard, gnu::always_inline]] static Cap<
+  volatile SonataPulseWidthModulation::LcdBacklight>
+pwm_bl()
 {
-	return MMIO_CAPABILITY(SonataGPIO, gpio);
+	return MMIO_CAPABILITY(SonataPulseWidthModulation::LcdBacklight, pwm_lcd);
 }
 
-static constexpr uint32_t LcdCsPin  = 0;
-static constexpr uint32_t LcdRstPin = 1;
-static constexpr uint32_t LcdDcPin  = 2;
-static constexpr uint32_t LcdBlPin  = 3;
-
-static inline void set_gpio_output_bit(uint32_t bit, bool value)
-{
-	uint32_t output = gpio()->output;
-	output &= ~(1 << bit);
-	output |= value << bit;
-	gpio()->output = output;
-}
+static constexpr uint8_t LcdCsPin  = 0;
+static constexpr uint8_t LcdDcPin  = 1;
+static constexpr uint8_t LcdRstPin = 2;
 
 void lcd_init(LCD_Interface *lcdIntf, St7735Context *ctx)
 {
 	// Set the initial state of the LCD control pins.
-	set_gpio_output_bit(LcdDcPin, false);
-	set_gpio_output_bit(LcdBlPin, true);
-	set_gpio_output_bit(LcdCsPin, false);
+	spi()->data_command_set(false);
+	pwm_bl()->output_set(/*period=*/1, /*duty_cycle=*/255);
+	spi()->chip_select_assert(true);
 
 	// Initialise SPI driver.
 	spi()->init(false, false, true, false);
 
 	// Reset LCD.
-	set_gpio_output_bit(LcdRstPin, false);
+	spi()->reset_assert(true);
 	thread_millisecond_wait(150);
-	set_gpio_output_bit(LcdRstPin, true);
+	spi()->reset_assert(false);
 
 	// Initialise LCD driverr.
 	lcdIntf->handle = nullptr;
@@ -60,8 +56,8 @@ void lcd_init(LCD_Interface *lcdIntf, St7735Context *ctx)
 	};
 	lcdIntf->gpio_write =
 	  [](void *handle, bool csHigh, bool dcHigh) -> uint32_t {
-		set_gpio_output_bit(LcdCsPin, csHigh);
-		set_gpio_output_bit(LcdDcPin, dcHigh);
+		spi()->chip_select_assert(!csHigh);
+		spi()->data_command_set(dcHigh);
 		return 0;
 	};
 	lcdIntf->timer_delay = [](uint32_t ms) { thread_millisecond_wait(ms); };
@@ -72,13 +68,14 @@ void lcd_init(LCD_Interface *lcdIntf, St7735Context *ctx)
 
 	lcd_st7735_clean(ctx);
 }
+
 void lcd_destroy(LCD_Interface *lcdIntf, St7735Context *ctx)
 {
 	lcd_st7735_clean(ctx);
 	// Hold LCD in reset.
-	set_gpio_output_bit(LcdRstPin, false);
+	spi()->reset_assert(true);
 	// Turn off backlight.
-	set_gpio_output_bit(LcdBlPin, false);
+	pwm_bl()->output_set(/*period=*/0, /*duty_cycle=*/0);
 }
 
 void SonataLcd::clean()
@@ -100,7 +97,7 @@ void SonataLcd::clean(Color color)
 
 void SonataLcd::draw_image_rgb565(Rect rect, const uint8_t *data)
 {
-	lcd_st7735_draw_rgb565(
+	::lcd_st7735_draw_rgb565(
 	  &ctx,
 	  {{rect.left, rect.top}, rect.right - rect.left, rect.bottom - rect.top},
 	  data);
@@ -162,3 +159,4 @@ void SonataLcd::fill_rect(Rect rect, Color color)
 	  {{rect.left, rect.top}, rect.right - rect.left, rect.bottom - rect.top},
 	  static_cast<uint32_t>(color));
 }
+#endif

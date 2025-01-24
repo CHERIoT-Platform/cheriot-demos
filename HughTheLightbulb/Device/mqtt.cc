@@ -76,7 +76,11 @@ void __cheri_callback publishCallback(const char *topic,
 
 auto status_leds()
 {
+#if DEVICE_EXISTS(gpio_board)
+	return MMIO_CAPABILITY(SonataGPIO, gpio_board);
+#else
 	return MMIO_CAPABILITY(SonataGPIO, gpio);
+#endif
 }
 
 void __cheri_compartment("hugh") hugh()
