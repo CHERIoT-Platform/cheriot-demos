@@ -11,10 +11,10 @@ compartment("consumers")
     add_deps("unwind_error_handler")
     
     -- LCD drivers
-    add_files("../third_party/display_drivers/core/lcd_base.c")
-    add_files("../third_party/display_drivers/core/lucida_console_12pt.c")
-    add_files("../third_party/display_drivers/st7735/lcd_st7735.c")
-    add_files("../third_party/display_drivers/lcd.cc")
+    add_files("../../../third_party/display_drivers/core/lcd_base.c")
+    add_files("../../../third_party/display_drivers/core/lucida_console_12pt.c")
+    add_files("../../../third_party/display_drivers/st7735/lcd_st7735.c")
+    add_files("../../../third_party/display_drivers/lcd.cc")
 
 
 

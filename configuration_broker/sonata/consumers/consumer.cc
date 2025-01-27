@@ -27,7 +27,7 @@ DEFINE_READ_CONFIG_CAPABILITY(RGB_LED_CONFIG)
 #define USER_LED_CONFIG "user_led"
 DEFINE_READ_CONFIG_CAPABILITY(USER_LED_CONFIG)
 
-#include "../third_party/display_drivers/lcd.hh"
+#include "../../../third_party/display_drivers/lcd.hh"
 #include <platform-gpio.hh>
 #include <platform-rgbctrl.hh>
 

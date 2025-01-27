@@ -1,6 +1,7 @@
 // Copyright lowRISC Contributors.
 // SPDX-License-Identifier: Apache-2.0
 
+#if SONATA < 10000
 #include "lcd.hh"
 #include <utility>
 
@@ -162,3 +163,4 @@ void SonataLcd::fill_rect(Rect rect, Color color)
 	  {{rect.left, rect.top}, rect.right - rect.left, rect.bottom - rect.top},
 	  static_cast<uint32_t>(color));
 }
+#endif

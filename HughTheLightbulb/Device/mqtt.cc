@@ -13,7 +13,7 @@
 #include <sntp.h>
 #include <tick_macros.h>
 
-#include "third_party/display_drivers/lcd.hh"
+#include "../../third_party/display_drivers/lcd.hh"
 
 #include "mosquitto.org.h"
 
