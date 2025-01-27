@@ -15,7 +15,7 @@ option("board")
     set_default("ibex-safe-simulator")
 
 -- Common libraries and compartments
-includes("../common/json_parser")
+includes("../../third_party/json_parser")
 includes("../common/config_broker") 
 includes("../common/config_consumer")
 

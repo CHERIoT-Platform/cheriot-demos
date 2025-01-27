@@ -19,7 +19,7 @@ includes(path.join(sdkdir, "lib"))
 includes("../../network-stack/lib")
 
 -- Common libraries and compartments
-includes("../common/json_parser")
+includes("../../third_party/json_parser")
 includes("../common/config_broker") 
 includes("../common/config_consumer")
 
