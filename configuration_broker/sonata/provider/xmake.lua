@@ -9,10 +9,13 @@ compartment("provider")
     add_deps("freestanding", "TCPIP", "NetAPI", "TLS", "Firewall", "SNTP", "DNS", "MQTT", "time_helpers", "debug", "stdio")
     add_deps("unwind_error_handler")
     
+    add_includedirs("../../../third_party/crypto")
+    
     add_includedirs("../..")
     add_files("mqtt.cc")
     add_files("config.cc")
     add_files("status.cc")
+    add_files("signature.cc")
 
     on_load(function(target)
         target:add('options', "IPv6")

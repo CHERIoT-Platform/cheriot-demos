@@ -10,28 +10,38 @@
 
 #include "config/include/system_config.h"
 
+#include "signature.h"
+
 // Expose debugging features unconditionally for this compartment.
 using Debug = ConditionalDebug<true, "Status">;
 
 // Publish a string to the status topic
-void publish(SObj mqtt, std::string topic, const char *status, bool retain)
+void publish(SObj        mqtt,
+             std::string topic,
+             void       *status,
+             size_t      statusLength,
+             bool        retain)
 {
-	// Use a capability with only Load
+	Timeout t{MS_TO_TICKS(5000)};
+
+	// Use capabilities with only Load
 	// permission so we can be sure the MQTT stack
 	// doesn't capture a pointer to our buffer
-	Timeout           t{MS_TO_TICKS(5000)};
-	CHERI::Capability roJSON{status};
-	roJSON.permissions() &= {CHERI::Permission::Load};
-	if (roJSON.bounds() > 0)
-		roJSON.bounds() = strlen(status);
+	CHERI::Capability roTopic{topic.data()};
+	roTopic.permissions() &= {CHERI::Permission::Load};
+	roTopic.bounds().set_inexact(topic.size());
+
+	CHERI::Capability roStatus{status};
+	roStatus.permissions() &= {CHERI::Permission::Load};
+	roStatus.bounds().set_inexact(statusLength);
 
 	auto ret = mqtt_publish(&t,
 	                        mqtt,
 	                        1, // QoS 1 = delivered at least once
-	                        topic.data(),
+	                        roTopic,
 	                        topic.size(),
-	                        roJSON,
-	                        roJSON.bounds(),
+	                        roStatus,
+	                        statusLength,
 	                        retain);
 
 	if (ret < 0)
@@ -42,6 +52,7 @@ void publish(SObj mqtt, std::string topic, const char *status, bool retain)
 
 void send_status(SObj mqtt, std::string topic, systemConfig::Config *config)
 {
+	Debug::log("Sending Status");
 	char status[100];
 
 	static uint8_t prev = 0;
@@ -70,14 +81,30 @@ void send_status(SObj mqtt, std::string topic, systemConfig::Config *config)
 	  config->switches[5] ? 1 : 0,
 	  config->switches[6] ? 1 : 0,
 	  config->switches[7] ? 1 : 0);
-	publish(mqtt, topic, status, true);
+
+	// Get a signed version
+	size_t statusLength = strlen(status);
+	auto   signed_message =
+	  SIGNATURE::sign(MALLOC_CAPABILITY, "StatusCX", status, statusLength);
+	if (signed_message.data.is_valid())
+	{
+		Debug::log("Publishing signed message {}", signed_message.data);
+		publish(mqtt, topic, signed_message.data, signed_message.length, true);
+		heap_free(MALLOC_CAPABILITY, signed_message.data);
+	}
+	else
+	{
+		Debug::log("Failed to sign message");
+	}
 }
 
 void clear_status(SObj mqtt, std::string topic)
 {
+	// Clear the peristent status message by
+	// pubishing a zero length message
 	char              status;
 	CHERI::Capability statusCap = {&status};
 	statusCap.bounds()          = 0;
 	Debug::log("clear status with {}", statusCap);
-	publish(mqtt, topic, statusCap, true);
+	publish(mqtt, topic, statusCap, 0, true);
 }
