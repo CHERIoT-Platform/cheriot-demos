@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <token.h>
 
-#include "libhydrogen.h"
+#include "libhydrogen/hydrogen.h"
 
 //
 // A compartment wrapper for libhydrogen.  
