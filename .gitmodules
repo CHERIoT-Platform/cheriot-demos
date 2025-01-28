@@ -6,4 +6,4 @@
 	url = https://github.com/CHERIoT-Platform/network-stack.git
 [submodule "third_party/crypto/libhydrogen"]
 	path = third_party/crypto/libhydrogen
-	url = git@github.com:ConfiguredThings/libhydrogen.git
+	url = https://github.com/ConfiguredThings/libhydrogen.git
