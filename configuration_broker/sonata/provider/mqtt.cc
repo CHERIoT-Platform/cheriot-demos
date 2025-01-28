@@ -16,6 +16,7 @@
 
 #include "config/include/system_config.h"
 
+#include "signature.h"
 #include "config.h"
 #include "status.h"
 
@@ -58,7 +59,7 @@ std::string config_topic;
 std::string status_topic;
 
 /**
- * Generate config and status topics from an assigned sysetm ID
+ * Generate config and status topics from an assigned system ID
  */
 void generate_topics(char *id)
 {
@@ -98,7 +99,11 @@ void __cheri_callback publishCallback(const char *topic,
 		const char *id       = topic + idOffset;
 		size_t      idLength = topicLength - idOffset;
 
-		updateConfig(id, idLength, payload, payloadLength);
+		auto msg = SIGNATURE::verify_signature(payload, payloadLength);
+		if (msg.data != nullptr)
+		{
+			updateConfig(id, idLength, msg.data, msg.length);
+		}
 	}
 	else
 	{

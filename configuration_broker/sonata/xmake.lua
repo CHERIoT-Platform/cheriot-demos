@@ -20,6 +20,7 @@ includes("../../network-stack/lib")
 
 -- Common libraries and compartments
 includes("../../third_party/json_parser")
+includes("../../third_party/crypto")
 includes("../common/config_broker") 
 includes("../common/config_consumer")
 
@@ -46,6 +47,7 @@ firmware("config-broker-sonata")
 
     -- libraries
     add_deps("json_parser")
+    add_deps("crypto")
     add_deps("config_consumer")
 
     -- compartments
