@@ -20,9 +20,9 @@ using CHERI::Capability;
 // Keys used for signatures - for now compiled in but
 // should be runtime supplied, such as read from the SD
 // card. 
-#include "./config_pub_key.h"
-#include "./status_pri_key.h"
-#include "./status_pub_key.h"
+#include "./keys/config_pub_key.h"
+#include "./keys/status_pri_key.h"
+#include "./keys/status_pub_key.h"
 
 // Size of the header in signed messages
 #define SIGN_HEADER_BYTES hydro_sign_CONTEXTBYTES + hydro_sign_BYTES
