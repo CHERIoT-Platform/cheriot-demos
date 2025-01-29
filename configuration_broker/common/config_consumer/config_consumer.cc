@@ -51,7 +51,7 @@ namespace ConfigConsumer
 		// events as if each item has been updated.
 		for (auto i = 0; i < numOfItems; i++)
 		{
-			events[i] = {nullptr, EventWaiterFutex, 1};
+			events[i] = {nullptr, 1};
 		}
 
 		// Loop waiting for config changes.  The flow in here
@@ -94,7 +94,7 @@ namespace ConfigConsumer
 					// Make a fast claim on the data now, the handler
 					// can decide if it wants to make a full claim
 					Timeout t{5000};
-					int     claimed = heap_claim_fast(&t, item.data, nullptr);
+					int     claimed = heap_claim_ephemeral(&t, item.data, nullptr);
 					if (claimed != 0)
 					{
 						Debug::log(
@@ -123,7 +123,6 @@ namespace ConfigConsumer
 			for (auto i = 0; i < numOfItems; i++)
 			{
 				events[i] = {configItems[i].versionFutex,
-				             EventWaiterFutex,
 				             configItems[i].version};
 			}
 
