@@ -27,10 +27,22 @@ namespace
 {
 	static systemConfig::Config *currentConfig;
 
-	// Helpers to read the swicth values
+	// Helpers to read the switch values
 	auto switches()
 	{
-		return MMIO_CAPABILITY(SonataGPIO, gpio);
+		return MMIO_CAPABILITY_WITH_PERMISSIONS(
+		  SonataGPIO,
+#if DEVICE_EXISTS(gpio_board)
+		  gpio_board,
+#else
+		  gpio,
+#endif
+		  // Load access to the switches, no store.  This compartment can read
+		  // the switches but cannot update the LEDs.
+		  true,
+		  false,
+		  false,
+		  false);
 	}
 
 	// ID comes from the first two switches
