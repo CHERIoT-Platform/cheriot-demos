@@ -132,7 +132,13 @@ namespace
 
 	void setLED(int id, userLed::State state)
 	{
-		auto driver = MMIO_CAPABILITY(SonataGPIO, gpio);
+		auto driver = MMIO_CAPABILITY(SonataGPIO,
+#if DEVICE_EXISTS(gpio_board)
+		                       gpio_board
+#else
+		                       gpio
+#endif
+		);
 		if (state == userLed::State::On)
 		{
 			Debug::log("Set LED {} on", id);

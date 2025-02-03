@@ -12,7 +12,7 @@ includes(path.join(sdkdir, "lib/freestanding"),
          path.join(sdkdir, "lib/string"))
 
 option("board")
-    set_default("sonata")
+    set_default("sonata-1.1")
 
 -- network stack
 includes(path.join(sdkdir, "lib"))
