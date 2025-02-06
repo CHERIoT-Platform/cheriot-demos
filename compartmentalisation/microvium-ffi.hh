@@ -52,22 +52,27 @@ namespace
 	using AttackerRegisterState = std::array<void *, 8>;
 
 	/**
-	 * Address of the `AttackerRegisterState` on the stack.  This structure is
-	 * on the stack so that it can hold local capabilities.
+	 * Register (on-stack) register state into CILS
 	 */
-	ptraddr_t attackerRegisterStateAddress;
+	void state_set(AttackerRegisterState *rs)
+	{
+		void     *csp = __builtin_cheri_stack_get();
+		ptraddr_t top = __builtin_cheri_top_get(csp);
+		void     *reg = __builtin_cheri_address_set(csp, top - 16);
+
+		*static_cast<AttackerRegisterState**>(reg) = rs;
+	}
 
 	/**
-	 * Re-derive the pointer to the on-stack register state.
+	 * Fetch pointer to the on-stack register state from CILS
 	 */
 	AttackerRegisterState &state()
 	{
-		register AttackerRegisterState *cspRegister asm("csp");
-		asm("" : "=C"(cspRegister));
-		Capability<AttackerRegisterState> rs{cspRegister};
-		rs.address() = attackerRegisterStateAddress;
-		rs.bounds()  = sizeof(AttackerRegisterState);
-		return *rs;
+		void     *csp = __builtin_cheri_stack_get();
+		ptraddr_t top = __builtin_cheri_top_get(csp);
+		void     *reg = __builtin_cheri_address_set(csp, top - 16);
+
+		return **static_cast<AttackerRegisterState**>(reg);
 	}
 
 	/**
