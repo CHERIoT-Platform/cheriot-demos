@@ -77,7 +77,8 @@ int tick()
 		// the JavaScript interpreter, so that the callbacks can re-derive it
 		// from csp.
 		AttackerRegisterState state;
-		attackerRegisterStateAddress = Capability{&state}.address();
+
+		state_set(&state);
 
 		// Set a limit of bytecodes to execute, to prevent infinite loops.
 		mvm_stopAfterNInstructions(vm.get(), 20000);
