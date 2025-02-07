@@ -7,6 +7,7 @@
 
 #include "../../third_party/QRCode/qrcode.h"
 #include "../../third_party/display_drivers/lcd.hh"
+#include "platform-gpio.hh"
 
 using Debug = ConditionalDebug<true, "Hugh the lightbulb (lcd)">;
 
@@ -133,6 +134,7 @@ void __cheri_compartment("display") graphs()
 				                 : Color::Green));
 			}
 			bool switchValue = switches()->read_switch(7);
+			switchValue |= switches()->read_joystick().is_pressed();
 			if (switchValue != lastSwitchValue)
 			{
 				Debug::log("Switch value changed from {} to {}",
