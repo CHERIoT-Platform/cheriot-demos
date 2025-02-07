@@ -367,7 +367,11 @@ namespace
 	auto *gpio_device()
 	{
 #ifdef SUNBURST
+#if DEVICE_EXISTS(gpio_board)
+		return MMIO_CAPABILITY(SonataGPIO, gpio_board);
+#else
 		return MMIO_CAPABILITY(SonataGPIO, gpio);
+#endif
 #elif DEVICE_EXISTS(gpio_led0)
 #	define HAS_BUTTONS 1
 #	define HAS_SWITCHES 1
