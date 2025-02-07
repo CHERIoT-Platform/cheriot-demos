@@ -133,9 +133,9 @@ void __cheri_compartment("hugh") hugh()
 		Debug::log("Connecting to MQTT broker...");
 
 		t           = UnlimitedTimeout;
-		SObj handle = mqtt_connect(&t,
+		auto handle = mqtt_connect(&t,
 		                           STATIC_SEALED_VALUE(mqttTestMalloc),
-		                           STATIC_SEALED_VALUE(MosquittoOrgMQTT),
+		                           CONNECTION_CAPABILITY(MosquittoOrgMQTT),
 		                           publishCallback,
 		                           nullptr,
 		                           TAs,
