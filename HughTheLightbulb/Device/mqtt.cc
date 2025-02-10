@@ -174,8 +174,8 @@ void __cheri_compartment("hugh") hugh()
 
 		while (true)
 		{
-			size_t  heapFree = heap_available();
-			ret = mqtt_run(&t, handle);
+			size_t heapFree = heap_available();
+			ret             = mqtt_run(&t, handle);
 
 			if (ret < 0)
 			{

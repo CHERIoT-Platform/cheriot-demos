@@ -46,7 +46,7 @@ constexpr const size_t outgoingPublishCount = 20;
 
 // MQTT test broker: https://test.mosquitto.org/
 // Note: port 8883 is encrypted and unauthenticated
-DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MosquittoOrgMQTT,
+DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTServerCapability,
 #ifdef CHERIOT_DEMO_SERVER
                                          "demo.cheriot.org",
 #else
@@ -190,7 +190,7 @@ void __cheri_compartment("hugh_network") run()
 		t           = UnlimitedTimeout;
 		auto handle = mqtt_connect(&t,
 		                           STATIC_SEALED_VALUE(mqttMalloc),
-		                           CONNECTION_CAPABILITY(MosquittoOrgMQTT),
+		                           CONNECTION_CAPABILITY(MQTTServerCapability),
 		                           publish_callback,
 		                           nullptr,
 		                           TAs,

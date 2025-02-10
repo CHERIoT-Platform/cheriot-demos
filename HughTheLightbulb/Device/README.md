@@ -6,7 +6,7 @@ It displays the unique ID for this lightbulb on the LCD and then makes RGB LED0 
 
 Compile without IPv6 and with network fault injection enabled 
 ```
-xmake config --sdk=/cheriot-tools/ --IPv6=n --network-inject-faults=y -P .
+xmake config --sdk=/cheriot-tools/ --IPv6=n --network-inject-faults=y --scheduler-accounting=y
 xmake
 xmake run
 ```
