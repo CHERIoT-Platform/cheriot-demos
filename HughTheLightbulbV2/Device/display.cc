@@ -80,13 +80,13 @@ void __cheri_compartment("display") graphs()
 		                 qrRawdata.size());
 	}
 
-	bool lastSwitchValue = false;
+	bool lastButtonValue = false;
 	int  faults          = 0;
 	bool showQRCode      = false;
 
 	while (true)
 	{
-		bool newShowQRCode = switches()->read_switch(0);
+		bool newShowQRCode = switches()->read_switch(7);
 		if (newShowQRCode != showQRCode)
 		{
 			lcd.fill_rect(Rect::from_point_and_size({0, 0}, {160, 128}),
@@ -133,15 +133,14 @@ void __cheri_compartment("display") graphs()
 				                 ? Color::Red
 				                 : Color::Green));
 			}
-			bool switchValue = switches()->read_switch(7);
-			switchValue |= switches()->read_joystick().is_pressed();
-			if (switchValue != lastSwitchValue)
+			bool buttonValue = switches()->read_joystick().is_pressed();
+			if (buttonValue != lastButtonValue)
 			{
-				Debug::log("Switch value changed from {} to {}",
-				           lastSwitchValue,
-				           switchValue);
-				lastSwitchValue = switchValue;
-				if (switchValue)
+				Debug::log("Button value changed from {} to {}",
+				           lastButtonValue,
+				           buttonValue);
+				lastButtonValue = buttonValue;
+				if (buttonValue)
 				{
 					Debug::log("Injecting fault");
 					network_inject_fault();
