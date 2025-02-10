@@ -85,7 +85,7 @@ void __cheri_compartment("system_config") system_config_run()
 {
 	static systemConfig::Config config;
 
-	SObj setCap = WRITE_CONFIG_CAPABILITY(SYSTEM_CONFIG);
+	ConfigCapability setCap = WRITE_CONFIG_CAPABILITY(SYSTEM_CONFIG);
 
 	char name[systemConfig::IdLength - 3];
 	if (strcmp(SYSTEM_ID, "random") == 0)

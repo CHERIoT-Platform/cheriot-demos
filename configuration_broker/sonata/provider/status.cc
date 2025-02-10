@@ -16,7 +16,7 @@
 using Debug = ConditionalDebug<true, "Status">;
 
 // Publish a string to the status topic
-void publish(SObj        mqtt,
+void publish(MQTTConnection mqtt,
              std::string topic,
              void       *status,
              size_t      statusLength,
@@ -50,7 +50,7 @@ void publish(SObj        mqtt,
 	}
 }
 
-void send_status(SObj mqtt, std::string topic, systemConfig::Config *config)
+void send_status(MQTTConnection mqtt, std::string topic, systemConfig::Config *config)
 {
 	Debug::log("Sending Status");
 	char status[100];
@@ -98,7 +98,7 @@ void send_status(SObj mqtt, std::string topic, systemConfig::Config *config)
 	}
 }
 
-void clear_status(SObj mqtt, std::string topic)
+void clear_status(MQTTConnection mqtt, std::string topic)
 {
 	// Clear the peristent status message by
 	// pubishing a zero length message

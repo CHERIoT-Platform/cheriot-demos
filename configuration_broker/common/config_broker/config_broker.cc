@@ -56,7 +56,7 @@ namespace
 	/**
 	 * Unseal a config capability.
 	 */
-	ConfigToken *config_capability_unseal(SObj sealedCap, SKey key)
+	ConfigToken *config_capability_unseal(ConfigCapability sealedCap, SKey key)
 	{
 		ConfigToken *token = token_unseal(key, Sealed<ConfigToken>{sealedCap});
 
@@ -120,7 +120,7 @@ namespace
  * the capability.
  */
 int __cheri_compartment("config_broker")
-  set_config(SObj sealedCap, const void *src, size_t srcLength)
+  set_config(ConfigCapability sealedCap, const void *src, size_t srcLength)
 {
 	Debug::log(
 	  "thread {} Set config called for {}", thread_id_get(), sealedCap);
@@ -233,7 +233,7 @@ int __cheri_compartment("config_broker")
  * Get the current value of a Configuration item.  The data
  * member will be nullptr if the item has not yet been set.
  */
-ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
+ConfigItem __cheri_compartment("config_broker") get_config(ConfigCapability sealedCap)
 {
 	// Object to return.  Stack is initialised to zeros
 	ConfigItem result;
@@ -292,7 +292,7 @@ ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
  * Set the parser for a config item.
  */
 int __cheri_compartment("config_broker")
-  set_parser(SObj                 sealedCap,
+  set_parser(ConfigCapability     sealedCap,
              __cheri_callback int parser(const void *src, void *dst))
 {
 	Debug::log(

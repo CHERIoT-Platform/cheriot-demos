@@ -22,6 +22,8 @@ struct ConfigToken
 	const char Name[];         // Name of the configuration item
 };
 
+typedef CHERI_SEALED(struct ConfigToken *) ConfigCapability;
+
 /**
  * Macros to create and use a Sealed Capability to read a config item
  */
@@ -41,7 +43,7 @@ struct ConfigToken
 	  name);
 
 #define READ_CONFIG_CAPABILITY(name)                                           \
-	STATIC_SEALED_VALUE(__read_config_capability_##name)
+	(ConfigCapability) STATIC_SEALED_VALUE(__read_config_capability_##name)
 
 /**
  * Macros to create and use a Sealed Capability to write a config item
@@ -62,7 +64,7 @@ struct ConfigToken
 	  name);
 
 #define WRITE_CONFIG_CAPABILITY(name)                                          \
-	STATIC_SEALED_VALUE(__write_config_capability_##name)
+	(ConfigCapability) STATIC_SEALED_VALUE(__write_config_capability_##name)
 
 /**
  * Marcos to create and use a Sealed Capability to set the parser
@@ -84,7 +86,7 @@ struct ConfigToken
 	  name);
 
 #define PARSER_CONFIG_CAPABILITY(name)                                         \
-	STATIC_SEALED_VALUE(__parser_config_capability_##name)
+	(ConfigCapability) STATIC_SEALED_VALUE(__parser_config_capability_##name)
 
 /**
  * External view of a configuration item.
@@ -103,7 +105,7 @@ struct ConfigItem
  * Returns 0 for success.
  */
 int __cheri_compartment("config_broker")
-  set_config(SObj configWriteCapability, const void *src, size_t srcLength);
+  set_config(ConfigCapability configWriteCapability, const void *src, size_t srcLength);
 
 /**
  * Read the value of a configuration item.
@@ -122,7 +124,7 @@ int __cheri_compartment("config_broker")
  *                  the caller does not have access to the item.
  */
 ConfigItem __cheri_compartment("config_broker")
-  get_config(SObj configReadCapability);
+  get_config(ConfigCapability configReadCapability);
 
 /**
  * Set the parser for a configuration item.
@@ -135,5 +137,5 @@ ConfigItem __cheri_compartment("config_broker")
  * point.
  */
 int __cheri_compartment("config_broker")
-  set_parser(SObj                 configValidateCapability,
+  set_parser(ConfigCapability configValidateCapability,
              __cheri_callback int parse(const void *src, void *dst));

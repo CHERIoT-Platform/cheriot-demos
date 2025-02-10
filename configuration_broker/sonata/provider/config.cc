@@ -33,7 +33,7 @@ namespace
 	struct Config
 	{
 		const char *name;
-		SObj        cap; // Sealed Write Capability
+		ConfigCapability cap; // Sealed Write Capability
 	};
 
 	// We can't use the macros at the file level to statically

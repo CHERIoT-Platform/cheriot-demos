@@ -32,7 +32,7 @@ namespace ConfigConsumer
 		uint16_t num_timeouts = 0;
 
 		// Create the multi waiter
-		struct MultiWaiter *mw = nullptr;
+		MultiWaiter mw = nullptr;
 		Timeout             t1{MS_TO_TICKS(1000)};
 		multiwaiter_create(&t1, MALLOC_CAPABILITY, &mw, numOfItems);
 		if (mw == nullptr)

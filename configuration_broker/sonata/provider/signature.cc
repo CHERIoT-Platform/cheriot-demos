@@ -71,7 +71,7 @@ Message verify_signature(const void *payload, size_t payloadLength)
  *
  * Packed as Context[8] + Signature[64] + Message
  */
-Message sign(SObj allocator, const char* context,
+Message sign(AllocatorCapability allocator, const char* context,
                const char *message, size_t messageLength) {
 
 	Timeout t{100};
