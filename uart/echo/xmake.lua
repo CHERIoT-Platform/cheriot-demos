@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: MIT
 
 set_project("CHERIoT UART demo")
-sdkdir = "../cheriot-rtos/sdk"
+sdkdir = "../../cheriot-rtos/sdk"
 includes(sdkdir)
 set_toolchains("cheriot-clang")
 
