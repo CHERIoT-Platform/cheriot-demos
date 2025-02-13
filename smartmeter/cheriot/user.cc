@@ -18,7 +18,9 @@
 using Debug = ConditionalDebug<true, "user">;
 using CHERI::Capability;
 
-uint32_t code_load_count;
+uint32_t net_wake_count;
+uint32_t timebase_zero;
+uint16_t timebase_rate = 1;
 
 /// Thread entry point.
 int user_data_entry()
@@ -44,7 +46,7 @@ int user_data_entry()
 	                                            {&gridRequest->version, 0},
 	                                            {&providerSchedule->version, 0},
 	                                            {&providerVariance->version, 0},
-	                                            {&code_load_count, 0}};
+	                                            {&net_wake_count, 0}};
 
 	{
 		int ret =
@@ -66,7 +68,18 @@ int user_data_entry()
 		// TODO: limited timeouts
 		// TODO: collect which ones were updated to pass to JS
 		Timeout t{UnlimitedTimeout};
-		sensorData->read(&t, events[0].value, localSnapshots.sensor_data);
+		if (sensorData->read(&t, events[0].value, localSnapshots.sensor_data) ==
+		    0)
+		{
+			/* Recompute our copy according to our timebase zero and rate */
+			uint32_t &sts = localSnapshots.sensor_data.timestamp;
+			if (sts >= timebase_zero)
+			{
+				uint32_t elapsed = sts - timebase_zero;
+				elapsed *= timebase_rate;
+				sts = timebase_zero + elapsed;
+			}
+		}
 		gridOutage->read(&t, events[1].value, localSnapshots.grid_outage);
 		gridRequest->read(&t, events[2].value, localSnapshots.grid_request);
 		providerSchedule->read(
@@ -74,7 +87,7 @@ int user_data_entry()
 		providerVariance->read(
 		  &t, events[4].value, localSnapshots.provider_variance);
 
-		events[5].value = code_load_count;
+		events[5].value = net_wake_count;
 
 		*snapshots = localSnapshots;
 
@@ -112,6 +125,11 @@ DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MosquittoOrgMQTT,
 
 constexpr std::string_view jsTopicPrefix{"cheriot-smartmeter/u/js/"};
 std::array<char, jsTopicPrefix.size() + housekeeping_mqtt_unique_size> jsTopic;
+
+constexpr std::string_view timebaseTopicPrefix{
+  "cheriot-smartmeter/u/timebase/"};
+std::array<char, timebaseTopicPrefix.size() + housekeeping_mqtt_unique_size>
+  timebaseTopic;
 
 void __cheri_callback publishCallback(const char *topicName,
                                       size_t      topicNameLength,
@@ -151,11 +169,39 @@ void __cheri_callback publishCallback(const char *topicName,
 		user_javascript_load(static_cast<const uint8_t *>(newPayload),
 		                     payloadLength);
 
-		code_load_count++;
-		futex_wake(&code_load_count, UINT32_MAX);
-
 		// The other compartment has claimed it; drop our claim.
 		free(newPayload);
+
+		net_wake_count++;
+		futex_wake(&net_wake_count, UINT32_MAX);
+	}
+	else if (topicView ==
+	         std::string_view{timebaseTopic.data(), timebaseTopic.size()})
+	{
+		/*
+		 * 10 digits for 32-bit timebase_zero, space, 5 digits for unsigned
+		 * 16-bit number, NUL
+		 */
+		char buf[10 + 1 + 5 + 1];
+
+		if (payloadLength >= sizeof(buf))
+		{
+			Debug::log("Overlong timebase PUBLISH, discarding");
+			return;
+		}
+		memcpy(buf, payload, payloadLength);
+		buf[payloadLength] = '\0';
+
+		char *ptr;
+		timebase_zero = strtoul(buf, &ptr, 10);
+		timebase_rate = strtoul(ptr, &ptr, 10);
+
+		Debug::log("New timebase {} {}; re-evaulating policy",
+		           timebase_zero,
+		           timebase_rate);
+
+		net_wake_count++;
+		futex_wake(&net_wake_count, UINT32_MAX);
 	}
 	else
 	{
@@ -176,6 +222,7 @@ int user_net_entry()
 	const char *mqttName = housekeeping_mqtt_unique_get();
 	HOUSEKEEPING_MQTT_CONCAT(clientID, clientIDPrefix, mqttName);
 	HOUSEKEEPING_MQTT_CONCAT(jsTopic, jsTopicPrefix, mqttName);
+	HOUSEKEEPING_MQTT_CONCAT(timebaseTopic, timebaseTopicPrefix, mqttName);
 
 	while (true)
 	{
@@ -213,7 +260,19 @@ int user_net_entry()
 
 		if (ret < 0)
 		{
-			Debug::log("Failed to subscribe for outages: {}", ret);
+			Debug::log("Failed to subscribe for new code: {}", ret);
+			goto retry;
+		}
+
+		ret = mqtt_subscribe(&noTimeout,
+		                     handle,
+		                     1, // QoS 1 = delivered at least once
+		                     timebaseTopic.data(),
+		                     timebaseTopic.size());
+
+		if (ret < 0)
+		{
+			Debug::log("Failed to subscribe for timebase: {}", ret);
 			goto retry;
 		}
 
