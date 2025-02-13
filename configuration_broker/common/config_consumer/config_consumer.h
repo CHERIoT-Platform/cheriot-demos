@@ -15,7 +15,7 @@ namespace ConfigConsumer
 	 */
 	struct ConfigItem
 	{
-		ConfigCapability capability; // Sealed Read Capability
+		ReadConfigCapability capability; // Sealed Read Capability
 		int (*handler)(void *); // Handler to call
 		uint32_t               version;
 		std::atomic<uint32_t> *versionFutex;

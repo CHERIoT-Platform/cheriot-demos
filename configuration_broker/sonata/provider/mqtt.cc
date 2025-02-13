@@ -114,7 +114,7 @@ void __cheri_callback publishCallback(const char *topic,
 /**
  * Check for changes in system status.
  */
-int update_status(ConfigCapability configHandle, MQTTConnection mqttHandle)
+int update_status(ReadConfigCapability configHandle, MQTTConnection mqttHandle)
 {
 	static bool                  subscribed    = false;
 	static uint32_t              configVersion = 0;
