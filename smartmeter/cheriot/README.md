@@ -118,6 +118,32 @@ Running, for example, `compile.sh ./sample_policy.js`, will result in a `sample_
 
     mosquitto_pub -h test.mosquitto.org -p 1883 -q 1 -t cheriot-smartmeter/u/js/${METER_ID} -s < sample_policy.mvm-bc
 
+### Speeding Up Simulated Time
+
+Because this is a _demonstration_ and not a _real device_, it's helpful to be able to run faster than real time.
+Towards that end, the policy evaluator understands a "timebase zero",
+after which (simulated) time elapses at a positive multiple rate relative to real time.
+While the policy code will still be evaluated in real time
+(and, in particular, in response to sensor data that will continue to be published every 30 _wall-clock_ seconds),
+the timestamp associated sensor reports, which drives most of the policy's idea of time,
+will be artificially advanced.
+Specifically, given a _wall-clock_ time T, a timebase zero Z, and a timebase rate R,
+if T >= Z, then the time will instead be indicated as
+
+    Z + R * (T - Z)
+
+Thus, setting R to 10, for example, will cause the policy code's 30 _wall-clock_ second evaulation interval to
+correspond to a 5 _simulated minute_ interval.
+
+As with most everything, setting the timebase is done over MQTT.  Run something like
+
+    mosquitto_pub -h test.mosquitto.org -p 1883 -q 1 -t cheriot-smartmeter/u/timebase/${METER_ID} -s << HERE
+    $(date +%s --date="12 minutes ago") 10
+    HERE
+
+to set the timebase zero (Z) to 10 minutes ago and the rate (R) to 10.
+(Making the timebase zero two _simulated hours_ ago.)
+
 ## Development
 
 ### Changing the JS FFI
