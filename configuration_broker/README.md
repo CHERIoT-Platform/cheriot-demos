@@ -20,7 +20,7 @@ As well as providing run time controls this aspect of the configuration can be a
 * A sandbox compartment in which untrusted data can be verified and converted to trusted configuration values.
 
 The core Configuration Broker has been written to be generic and directly reusable, and has no dependencies on the specific configuration items being managed.
-To builds (ibex-sim and Sonata) are provided to show how this can then be incorporated into systems, with supporting code to deal with specific configuration items.
+Two builds (ibex-sim and Sonata) are provided to show how this can then be incorporated into systems, with supporting code to deal with specific configuration items.
 All are example of how to develop such components using CHERIoT features such as static sealed capabilities, memory claims, locks, event-waiters, and sandbox compartments for handling untrusted data.
 
 Providing a generic broker and expressing the trust model via its interfaces makes it possible to add support for new configuration items without having to re-evaluate the trust model each time. 
@@ -197,12 +197,12 @@ The interval reflects that parsing an object and/or applying updates can can be 
 The Broker will reject without attempting to parse any updates that are made less that min_interval since the last attempt. 
 
 Parsers that can run without any heap interaction could be co-located in the same sandbox.
-In the demo we use a combination of a CHERIoT library wrapper to coreJSON from FreeRTOS and magic_emun, which requires a small amount of heap manipulation.
+In the demo we use a combination of a CHERIoT library wrapper to coreJSON from FreeRTOS and magic_enum, which requires a small amount of heap manipulation.
 Running each parser in its own sandbox compartment with a small heap quota prevents any risk of interaction between the different configuration item types even if there is some persistent heap based attack on the parser.  
 
 #### Integrity
 The Broker trusts that the Parser will correctly populate the object, but this can be established by code inspection & testing.
-Because the Parser can only be invoked by the Broker and is stateless it's correct operation can not be compromised. 
+Because the Parser can only be invoked by the Broker and it is stateless its correct operation can not be compromised. 
 
 The Parser has no need for trust in the Broker; if it is passed the wrong size buffer the operation will simply fail, or result in a partly populated object.
 
@@ -236,9 +236,9 @@ There is no path for the publisher to affect the integrity of the data after it 
 The Broker only maintains a read only pointer to the parsed data, so neither it nor a consumer can mutate it.
 
 #### Availability
-The Provider can not make the Broker consume more of its heap that the 2x the size defined in the corresponding sealed capability of the Parser (current version + new version).
+The Provider can not make the Broker consume more of its heap than 2x the size defined in the corresponding sealed capability of the Parser (current version + new version).
 
-The Provider can not make the Broker attempt to parse it's data more often that the minimum interval defined in the corresponding sealed capability of the Parser.
+The Provider can not make the Broker attempt to parse its data more often that the minimum interval defined in the corresponding sealed capability of the Parser.
 
 The Provider is trusting the Broker, and indirectly the Parser, not to block its thread.
 
@@ -249,14 +249,14 @@ Consumers have one or more READ_CONFIG_CAPABILITY(s) that define which items the
 Consumers can request the current value at any time by passing their sealed capability to the Broker.
 In return they receive a data structure with four values:
 * The name of the item. 
-* A read only pointer the current data value (which maybe null if it hasn't been set yet).
+* A read only pointer to the current data value (which maybe null if it hasn't been set yet).
 * The current version.
 * A read only pointer to a futex they can wait on for the version to change.
 
 The normal pattern for a consumer is to have a thread which makes an initial call to get as a minimum the current version and futex to wait on, process the current value (if any) and then wait for changes. 
 
-The Broker allocate heap space for each new version of the data, which it releases when a new value becomes available.
-Consumers must assert their own claims and fast_claims to keep the value available to them for as long as they need it. 
+The Broker allocates heap space for each new version of the data, which it releases when a new value becomes available.
+Consumers must assert their own claims (or ephemeral claims) to keep the value available to them for as long as they need it. 
 
 As with the Provider the extent to which the Broker trusts a Consumer is encapsulated in the sealed capability, so it is only "trusting" something which can be audited at build time.
 
@@ -273,15 +273,15 @@ The Consumer is trusting that the Broker wil notify it when new versions are ava
 
 The Consumer can not affect the Brokers heap quota; if the Consumer fails to make or release a claim it only affects itself.
 
-The Consumer is trusting that Broker will not block it's thread when it reads a value.
-It has control over when it's thread waits on the futex for a new version, and for how long to wait. 
+The Consumer is trusting that Broker will not block its thread when it reads a value.
+It has control over when its thread waits on the futex for a new version, and for how long to wait. 
 
 # Initalisation
 A key aspect of the design is to be able to add new configuration items just by creating the associated sealed capabilities and assigning them to the appropriate compartments.
 To support this approach each parser must register with the broker.
-This is turn creates an initialisation issue as the parsers do not have their own thread (the run on the thread that want's to set a vew value), and CHERIoT has no general init mechanism.
+This is turn creates an initialisation issue as the parsers do not have their own thread (they run on the thread that wants to set a vew value), and CHERIoT has no general init mechanism[^init].
 Ideally we would restrict the scope of who can call a parser to just the config-broker, but that would require the broker to know about all parsers.
-Instead we start one thread in a build-specific parser-init compartment, that calls each of the parsers init methods before transferring into the provider compartment.  This allows us to still assert limits around which compartments access to the parsers. 
+Instead we start one thread in a build-specific parser-init compartment, that calls each of the parsers init methods before transferring into the provider compartment.  This allows us to still assert limits around which compartments have access to the parsers. 
 
 # Repository Structure
 The demo can be built for two targets.
@@ -338,7 +338,7 @@ _/config could be considered platform specific, but in this example some data ty
 │   ├── system_config
 │   │   └── << A configuration item generator >>
 │   ├── third_party
-│   │   └── << Sonat LCD display driver >>
+│   │   └── << Sonata LCD display driver >>
 │   └── xmake.lua
 
 ```
@@ -346,7 +346,7 @@ _/config could be considered platform specific, but in this example some data ty
 
 # IBEX Simulator
 
-This build provides something akin to test case for the broker;  It runs to completion using test data and with no external dependencies. 
+This build provides something akin to a test case for the broker;  It runs to completion using test data and with no external dependencies. 
 
 ```mermaid
 block-beta
@@ -383,7 +383,7 @@ There are two Consumers in the demo, each implemented as separate compartments.
 Consumer #1 is authorised to receive the RGB LED configuration.
 Consumer #2 is authorised to receive the User LED configuration.
 Both consumers are authorised to receive the Logger configuration.
-The latest logger configuration is used when updating the LED configurations to show the use of heap claims to kept a value available between updates.
+The latest logger configuration is used when updating the LED configurations to show the use of heap claims to keep a value available between updates.
 
 A thread is started in each consumer which waits for new versions to become available and then, to keep the demo h/w agnostic, makes a library call to print the received value.
 
@@ -392,7 +392,7 @@ This allows the Provider to sleep between messages giving the Consumers a chance
 
 ## Configuration Data
 
-The demo uses three configuration values; two based on Sonata board and a third more contrived for the demo.
+The demo uses three configuration values; two based on the Sonata board and a third more contrived for the demo.
 The values are mix of strings, numbers, and enumerations.  
 
 ### RGB LEDs
@@ -565,9 +565,9 @@ namespace systemConfig
 ```
 
 The _id_ value is used to determine which MQTT topics to use, and is the combination of a randomly generated string and the numeric value of the first two switches, for example "ghdyeosp_1".
-Changing the switches changes the id causes the system to subscribe to a different set of topics.
+Changing the switches changes the id and causes the system to subscribe to a different set of topics.
 If the broker is populated with a collection of persistently published messages this allows a board to move between different configurations without having to republish the messages to MQTT.
-The random string can be replaces with a fixed name by passing a system-id value to xmake config
+The random string can be replaced with a fixed name by passing a system-id value to xmake config
 ```
    xmake f --system-id=MySystem --IPv6=n  --sdk=/cheriot-tools -P .
 ```
@@ -603,7 +603,7 @@ xmake config --IPv6=n --system-id=MySonata --sdk=/cheriot-tools/ -P .
 ```
 
 The system-id is combined with the value of switches 0 and 1 on the Sonata board to create the Config and Status topics.
-If the switches are changed the system clear its current status message, unsubscribe from the previous configuration topic, and re-subscribe and publish status to the new topics.
+If the switches are changed the system clears its current status message, unsubscribes from the previous configuration topic, and re-subscribes and publishes status to the new topics.
 This makes it possible for demo purposes to switch the board between different configurations using pre-published retained configuration messages without having to publish a new message each time.
 
 Status is published to the topic
@@ -630,4 +630,6 @@ sonata-config/Config/MySonata-0/rbg_LED
 {"led0":{"red":0,"green":40,"blue":40},"led1":{"red":50,"green":0,"blue":0}}
 ```
 
+
+[^init] Yet. See https://github.com/CHERIoT-Platform/cheriot-rtos/issues/275
 

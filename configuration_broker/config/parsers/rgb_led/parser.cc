@@ -68,7 +68,7 @@ int __cheri_callback parse_RGB_LED_config(const void *src, void *dst)
 	result = jsonParser::validate(json, jsonLength);
 	if (result != JSONSuccess)
 	{
-		Debug::log("thread {} Invalid JSON {}", thread_id_get(), json);
+		Debug::log("thread {} Invalid JSON {}", thread_id_get(), std::string_view{json, jsonLength});
 		return -1;
 	}
 

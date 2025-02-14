@@ -114,7 +114,7 @@ void __cheri_callback publishCallback(const char *topic,
 /**
  * Check for changes in system status.
  */
-int update_status(SObj configHandle, SObj mqttHandle)
+int update_status(ReadConfigCapability configHandle, MQTTConnection mqttHandle)
 {
 	static bool                  subscribed    = false;
 	static uint32_t              configVersion = 0;
@@ -207,7 +207,7 @@ void __cheri_compartment("provider") provider_run()
 	Timeout t{MS_TO_TICKS(5000)};
 
 	// Handle granting us access to read the system config
-	SObj configHandle = READ_CONFIG_CAPABILITY(SYSTEM_CONFIG);
+	auto configHandle = READ_CONFIG_CAPABILITY(SYSTEM_CONFIG);
 
 	// Prefix with something recognizable, for convenience.
 	memcpy(clientID.data(), clientIDPrefix.data(), clientIDPrefix.size());
@@ -220,9 +220,9 @@ void __cheri_compartment("provider") provider_run()
 		Debug::log("Connecting to MQTT broker...");
 
 		t               = UnlimitedTimeout;
-		SObj mqttHandle = mqtt_connect(&t,
+		auto mqttHandle = mqtt_connect(&t,
 		                               STATIC_SEALED_VALUE(mqttTestMalloc),
-		                               STATIC_SEALED_VALUE(MosquittoOrgMQTT),
+		                               CONNECTION_CAPABILITY(MosquittoOrgMQTT),
 		                               publishCallback,
 		                               nullptr,
 		                               TAs,

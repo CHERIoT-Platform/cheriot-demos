@@ -184,7 +184,7 @@ void __cheri_compartment("provider") provider_run()
 		Debug::Assert(res == m.expected, "Unexpected result {}", res);
 
 		// Give the consumers a chance to run
-		Timeout t4{MS_TO_TICKS(500)};
+		Timeout t4{MS_TO_TICKS(1000)};
 		thread_sleep(&t4, ThreadSleepNoEarlyWake);
 	}
 

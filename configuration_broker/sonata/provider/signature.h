@@ -18,7 +18,7 @@ Message verify_signature(const void *payload, size_t payloadLength);
 
 // Sign a message and return new message which includes a capabilty to a heap allocated buffer
 // containing the message and the signature
-Message sign(SObj allocator, const char* context,
+Message sign(AllocatorCapability allocator, const char* context,
                const char *message, size_t messageLength);
 
 } // namespace CRYPTO

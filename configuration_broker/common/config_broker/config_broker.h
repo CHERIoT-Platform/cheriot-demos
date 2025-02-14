@@ -22,22 +22,27 @@ struct ConfigToken
 	const char Name[];         // Name of the configuration item
 };
 
+struct ConfigName {
+	const char Name[];
+};
+
+typedef CHERI_SEALED(struct ConfigName *) ReadConfigCapability;
+typedef CHERI_SEALED(struct ConfigName *) WriteConfigCapability;
+typedef CHERI_SEALED(struct ConfigToken *) ConfigCapability;
+
 /**
  * Macros to create and use a Sealed Capability to read a config item
  */
 #define DEFINE_READ_CONFIG_CAPABILITY(name)                                    \
                                                                                \
-	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE(                                    \
+	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE_EXPLICIT_TYPE(                      \
 	  struct {                                                                 \
-		  size_t     notUsed1;                                                 \
-		  uint32_t   notUsed2;                                                 \
 		  const char Name[sizeof(name)];                                       \
 	  },                                                                       \
+	  struct ConfigName,                                                    \
 	  config_broker,                                                           \
 	  ReadConfigKey,                                                           \
 	  __read_config_capability_##name,                                         \
-	  0,                                                                       \
-	  0,                                                                       \
 	  name);
 
 #define READ_CONFIG_CAPABILITY(name)                                           \
@@ -48,17 +53,14 @@ struct ConfigToken
  */
 #define DEFINE_WRITE_CONFIG_CAPABILITY(name)                                   \
                                                                                \
-	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE(                                    \
+	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE_EXPLICIT_TYPE(                      \
 	  struct {                                                                 \
-		  size_t     notUsed1;                                                 \
-		  uint32_t   notUsed2;                                                 \
 		  const char Name[sizeof(name)];                                       \
 	  },                                                                       \
+	  struct ConfigName,                                                        \
 	  config_broker,                                                           \
 	  WriteConfigKey,                                                          \
 	  __write_config_capability_##name,                                        \
-	  0,                                                                       \
-	  0,                                                                       \
 	  name);
 
 #define WRITE_CONFIG_CAPABILITY(name)                                          \
@@ -70,12 +72,13 @@ struct ConfigToken
  */
 #define DEFINE_PARSER_CONFIG_CAPABILITY(name, Size, UpdateInterval)            \
                                                                                \
-	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE(                                    \
+	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE_EXPLICIT_TYPE(                      \
 	  struct {                                                                 \
 		  size_t     size;                                                     \
 		  uint32_t   update_interval;                                          \
 		  const char Name[sizeof(name)];                                       \
 	  },                                                                       \
+	  struct ConfigToken,                                                        \
 	  config_broker,                                                           \
 	  ParserConfigKey,                                                         \
 	  __parser_config_capability_##name,                                       \
@@ -103,7 +106,7 @@ struct ConfigItem
  * Returns 0 for success.
  */
 int __cheri_compartment("config_broker")
-  set_config(SObj configWriteCapability, const void *src, size_t srcLength);
+  set_config(WriteConfigCapability configWriteCapability, const void *src, size_t srcLength);
 
 /**
  * Read the value of a configuration item.
@@ -122,7 +125,7 @@ int __cheri_compartment("config_broker")
  *                  the caller does not have access to the item.
  */
 ConfigItem __cheri_compartment("config_broker")
-  get_config(SObj configReadCapability);
+  get_config(ReadConfigCapability configReadCapability);
 
 /**
  * Set the parser for a configuration item.
@@ -135,5 +138,5 @@ ConfigItem __cheri_compartment("config_broker")
  * point.
  */
 int __cheri_compartment("config_broker")
-  set_parser(SObj                 configValidateCapability,
+  set_parser(ConfigCapability configValidateCapability,
              __cheri_callback int parse(const void *src, void *dst));

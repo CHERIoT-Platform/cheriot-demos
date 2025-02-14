@@ -53,10 +53,30 @@ namespace
 #define CONFIG_READ STATIC_SEALING_TYPE(ReadConfigKey)
 #define CONFIG_PARSER STATIC_SEALING_TYPE(ParserConfigKey)
 
+
+	/**
+	 * Unseal a ConfigName (i.e. Read or Write) capability.
+	 */
+	 ConfigName *name_capability_unseal(CHERI_SEALED(ConfigName *) sealedCap, SKey key)
+	 {
+		 auto token = token_unseal(key, Sealed{sealedCap});
+ 
+		 if (token == nullptr)
+		 {
+			 Debug::log("invalid name capability {}", sealedCap);
+			 return nullptr;
+		 }
+ 
+		 Debug::log("Unsealed - Name: {}",
+					token->Name);
+ 
+		 return token;
+	 }
+
 	/**
 	 * Unseal a config capability.
 	 */
-	ConfigToken *config_capability_unseal(SObj sealedCap, SKey key)
+	ConfigToken *config_capability_unseal(ConfigCapability sealedCap, SKey key)
 	{
 		ConfigToken *token = token_unseal(key, Sealed<ConfigToken>{sealedCap});
 
@@ -80,14 +100,14 @@ namespace
 	 * threads trying to create the same item.
 	 */
 
-	InternalConfigitem *find_or_create_config(ConfigToken *token)
+	InternalConfigitem *find_or_create_config(const char *name)
 	{
 		static FlagLock lockFindOrCreate;
 		LockGuard       g{lockFindOrCreate};
 
 		for (auto c = configData; c != nullptr; c = c->next)
 		{
-			if (strcmp(c->name, token->Name) == 0)
+			if (strcmp(c->name, name) == 0)
 			{
 				return c;
 			}
@@ -101,7 +121,7 @@ namespace
 			// Use the Name from the token that triggered the creation
 			// as the name value, since sealed objects are guaranteed not
 			// to be deallocated.
-			c->name    = token->Name;
+			c->name    = name;
 			c->version = 0;
 			c->data    = nullptr;
 
@@ -120,13 +140,13 @@ namespace
  * the capability.
  */
 int __cheri_compartment("config_broker")
-  set_config(SObj sealedCap, const void *src, size_t srcLength)
+  set_config(WriteConfigCapability sealedCap, const void *src, size_t srcLength)
 {
 	Debug::log(
 	  "thread {} Set config called for {}", thread_id_get(), sealedCap);
 
 	// Check that we've been given a valid capability
-	ConfigToken *token = config_capability_unseal(sealedCap, CONFIG_WRITE);
+	auto token = name_capability_unseal(sealedCap, CONFIG_WRITE);
 	if (token == nullptr)
 	{
 		Debug::log("Invalid set config capability: {}", sealedCap);
@@ -134,7 +154,7 @@ int __cheri_compartment("config_broker")
 	}
 
 	// Find or create a config structure
-	InternalConfigitem *c = find_or_create_config(token);
+	InternalConfigitem *c = find_or_create_config(token->Name);
 	if (c == nullptr)
 	{
 		Debug::log("Failed to create item {}", token->Name);
@@ -233,7 +253,7 @@ int __cheri_compartment("config_broker")
  * Get the current value of a Configuration item.  The data
  * member will be nullptr if the item has not yet been set.
  */
-ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
+ConfigItem __cheri_compartment("config_broker") get_config(ReadConfigCapability sealedCap)
 {
 	// Object to return.  Stack is initialised to zeros
 	ConfigItem result;
@@ -243,7 +263,7 @@ ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
 
 	// Get the calling compartments name from
 	// its sealed capability
-	ConfigToken *token = config_capability_unseal(sealedCap, CONFIG_READ);
+	auto token = name_capability_unseal(sealedCap, CONFIG_READ);
 
 	if (token == nullptr)
 	{
@@ -252,7 +272,7 @@ ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
 		return result;
 	}
 
-	auto c = find_or_create_config(token);
+	auto c = find_or_create_config(token->Name);
 	if (c == nullptr)
 	{
 		Debug::log("Failed to create item {}", token->Name);
@@ -292,7 +312,7 @@ ConfigItem __cheri_compartment("config_broker") get_config(SObj sealedCap)
  * Set the parser for a config item.
  */
 int __cheri_compartment("config_broker")
-  set_parser(SObj                 sealedCap,
+  set_parser(ConfigCapability     sealedCap,
              __cheri_callback int parser(const void *src, void *dst))
 {
 	Debug::log(
@@ -307,7 +327,7 @@ int __cheri_compartment("config_broker")
 		return -1;
 	}
 
-	auto c = find_or_create_config(token);
+	auto c = find_or_create_config(token->Name);
 	if (c == nullptr)
 	{
 		Debug::log("Failed to create item {}", token->Name);
