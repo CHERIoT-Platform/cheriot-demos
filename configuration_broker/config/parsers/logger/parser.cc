@@ -101,7 +101,7 @@ int __cheri_callback parse_logger_config(const void *src, void *dst)
 	}
 	else
 	{
-		Debug::log("Invalid host.port {}", config->host.port);
+		Debug::log("Invalid host.port {}", srcConfig->host.port);
 		parsed = false;
 	}
 
