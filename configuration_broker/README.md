@@ -641,5 +641,5 @@ In this case all configuration messages must carry a valid signature, and all st
 
 _Note: Signing support is being actively developed as part of the DSbD TAP program. Currently it depend on keys being compiled into the build from `provider/keys`, and we are still working to provide an external signing tool, hopefully as part of [CyberChef](https://gchq.github.io/CyberChef/)_
 
-[^init] Yet. See https://github.com/CHERIoT-Platform/cheriot-rtos/issues/275
+[^init]: Yet. See https://github.com/CHERIoT-Platform/cheriot-rtos/issues/275
 
