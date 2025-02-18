@@ -12,7 +12,7 @@
 #include <tick_macros.h>
 #include <timeout.hh>
 
-#include "mosquitto.org.h"
+#include MQTT_BROKER_ANCHOR
 
 /// Expose debugging features unconditionally for this compartment.
 using Debug = ConditionalDebug<true, "user">;
@@ -116,10 +116,8 @@ constexpr const size_t networkBufferSize    = 4096;
 constexpr const size_t incomingPublishCount = 2;
 constexpr const size_t outgoingPublishCount = 2;
 
-// MQTT test broker: https://test.mosquitto.org/
-// Note: port 8883 is encrypted and unautenticated
-DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MosquittoOrgMQTT,
-                                         "test.mosquitto.org",
+DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTConnectionRights,
+                                         MQTT_BROKER_HOST,
                                          8883,
                                          ConnectionTypeTCP);
 
@@ -233,7 +231,7 @@ int user_net_entry()
 		MQTTConnection handle =
 		  mqtt_connect(&noTimeout,
 		               MALLOC_CAPABILITY,
-		               CONNECTION_CAPABILITY(MosquittoOrgMQTT),
+		               CONNECTION_CAPABILITY(MQTTConnectionRights),
 		               publishCallback,
 		               nullptr /* XXX should watch our ACK stream */,
 		               TAs,

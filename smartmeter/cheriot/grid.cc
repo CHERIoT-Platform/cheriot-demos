@@ -22,7 +22,7 @@
 #include <thread.h>
 #include <tick_macros.h>
 
-#include "mosquitto.org.h"
+#include MQTT_BROKER_ANCHOR
 
 using CHERI::Capability;
 
@@ -43,10 +43,8 @@ constexpr const size_t networkBufferSize    = 1024;
 constexpr const size_t incomingPublishCount = 2;
 constexpr const size_t outgoingPublishCount = 2;
 
-// MQTT test broker: https://test.mosquitto.org/
-// Note: port 8883 is encrypted and unautenticated
-DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MosquittoOrgMQTT,
-                                         "test.mosquitto.org",
+DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTConnectionRights,
+                                         MQTT_BROKER_HOST,
                                          8883,
                                          ConnectionTypeTCP);
 
@@ -168,7 +166,7 @@ int grid_entry()
 		MQTTConnection handle =
 		  mqtt_connect(&noTimeout,
 		               MALLOC_CAPABILITY,
-		               CONNECTION_CAPABILITY(MosquittoOrgMQTT),
+		               CONNECTION_CAPABILITY(MQTTConnectionRights),
 		               publishCallback,
 		               nullptr /* XXX should watch our ACK stream */,
 		               TAs,
