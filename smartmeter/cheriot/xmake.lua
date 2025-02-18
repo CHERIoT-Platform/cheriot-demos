@@ -10,23 +10,33 @@ set_toolchains("cheriot-clang")
 netdir = os.getenv("CHERIOT_NETWORK_STACK") or path.absolute("../../network-stack")
 includes(path.join(netdir, "lib"))
 
-local function on_load_ipv6(target)
-  target:add('options', "IPv6")
-  local IPv6 = get_config("IPv6")
-  target:add("defines", "CHERIOT_RTOS_OPTION_IPv6=" .. tostring(IPv6))
-end
-
 option("board")
   set_default("sonata-1.1")
+
+option("broker-host")
+  set_default("test.mosquitto.org")
+
+option("broker-anchor")
+  set_default("mosquitto.org.h")
+
+rule("smartmeter.mqtt")
+  on_load(function (target)
+    -- Note: port 8883 to be encrypted and tolerating unautenticated connections
+    target:add('options', "broker-host")
+    local broker_host = get_config("broker-host")
+    target:add("defines", table.concat({"MQTT_BROKER_HOST=\"", tostring(broker_host), "\""}))
+
+    target:add('options', "broker-anchor")
+    local broker_anchor = get_config("broker-anchor")
+    target:add("defines", table.concat({"MQTT_BROKER_ANCHOR=\"", tostring(broker_anchor), "\""}))
+  end)
 
 compartment("housekeeping")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("housekeeping.cc")
 
-  on_load(function(target)
-    on_load_ipv6(target)
-  end)
+  add_rules("cheriot.network-stack.ipv6")
 
 compartment("sensor")
   add_includedirs(path.join(netdir,"include"))
@@ -42,9 +52,9 @@ compartment("grid")
 
   add_files("grid.cc")
 
-  on_load(function(target)
-    on_load_ipv6(target)
+  add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt")
 
+  on_load(function(target)
     target:values_set("shared_objects",
       { grid_planned_outage = 12,
         grid_request = 12 },
@@ -55,9 +65,10 @@ compartment("provider")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("provider.cc")
-  on_load(function(target)
-    on_load_ipv6(target)
 
+  add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt")
+
+  on_load(function(target)
     target:values_set("shared_objects",
       { provider_schedule = 104,
         provider_variance = 20 },
@@ -72,9 +83,9 @@ compartment("user")
 
   add_files("user.cc")
 
-  on_load(function(target)
-    on_load_ipv6(target)
+  add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt")
 
+  on_load(function(target)
     target:values_set("shared_objects",
       { userJS_snapshot = 168 },
       {expand = false})
