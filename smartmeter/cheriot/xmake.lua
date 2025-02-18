@@ -3,11 +3,11 @@
 
 set_project("CHERIoT MQTT Example")
 
-sdkdir = os.getenv("CHERIOT_SDK")
+sdkdir = os.getenv("CHERIOT_RTOS_SDK") or path.absolute("../../cheriot-rtos/sdk")
 includes(sdkdir)
 set_toolchains("cheriot-clang")
 
-netdir = os.getenv("CHERIOT_NETWORK_STACK") or path.join(sdkdir, "../../cheriot-network-stack")
+netdir = os.getenv("CHERIOT_NETWORK_STACK") or path.absolute("../../network-stack")
 includes(path.join(netdir, "lib"))
 
 local function on_load_ipv6(target)
