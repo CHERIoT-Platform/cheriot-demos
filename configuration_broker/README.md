@@ -54,6 +54,7 @@ Providing a generic broker and expressing the trust model via its interfaces mak
 - [Sonata](#sonata)
   - [Threads](#threads-1)
   - [Build Instructions (Dev container)](#build-instructions-dev-container-1)
+  - [Signed Message Support](#signed-message-support)
 
 
 # Overview
@@ -630,6 +631,15 @@ sonata-config/Config/MySonata-0/rbg_LED
 {"led0":{"red":0,"green":40,"blue":40},"led1":{"red":50,"green":0,"blue":0}}
 ```
 
+## Signed Message Support
+The sonata demo can be compiled to support signed MQTT messages
 
-[^init] Yet. See https://github.com/CHERIoT-Platform/cheriot-rtos/issues/275
+```
+xmake config --IPv6=n --system-id=MySonata --MQTT_Signed=true --sdk=/cheriot-tools/ -P .
+```
+In this case all configuration messages must carry a valid signature, and all status messages wil be signed.
+
+_Note: Signing support is being actively developed as part of the DSbD TAP program. Currently it depend on keys being compiled into the build from `provider/keys`, and we are still working to provide an external signing tool, hopefully as part of [CyberChef](https://gchq.github.io/CyberChef/)_
+
+[^init]: Yet. See https://github.com/CHERIoT-Platform/cheriot-rtos/issues/275
 
