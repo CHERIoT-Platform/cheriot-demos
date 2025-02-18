@@ -17,7 +17,7 @@ local function on_load_ipv6(target)
 end
 
 option("board")
-  set_default("sonata")
+  set_default("sonata-1.1")
 
 compartment("housekeeping")
   add_includedirs(path.join(netdir,"include"))
