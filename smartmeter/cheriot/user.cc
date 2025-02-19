@@ -105,7 +105,7 @@ int user_data_entry()
 /// specification)
 constexpr size_t MQTTMaximumClientLength = 23;
 /// Prefix for MQTT client identifier
-constexpr std::string_view clientIDPrefix{"cheriot-smu-"};
+constexpr std::string_view clientIDPrefix{"cheriotsmu"};
 /// Space for the random client ID.
 std::array<char, clientIDPrefix.size() + housekeeping_mqtt_unique_size>
   clientID;

@@ -32,7 +32,7 @@ using Debug = ConditionalDebug<true, "provider">;
 /// specification)
 constexpr size_t MQTTMaximumClientLength = 23;
 /// Prefix for MQTT client identifier
-constexpr std::string_view clientIDPrefix{"cheriot-smp-"};
+constexpr std::string_view clientIDPrefix{"cheriotsmp"};
 /// Space for the random client ID.
 std::array<char, clientIDPrefix.size() + housekeeping_mqtt_unique_size>
   clientID;
