@@ -1,0 +1,16 @@
+{
+  "name": "userfe",
+  "version": "0.0.0",
+  "description": "User Microvium Frontend",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "microvium": "^8.0.0",
+    "mqtt": "^5.10.3"
+  }
+}
