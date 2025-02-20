@@ -7,15 +7,16 @@
  * Maintains a MQTT connection and reports sensor data
  */
 
-#define MALLOC_QUOTA 24000
-
+#define CHERIOT_NO_AMBIENT_MALLOC
 #include "common.hh"
 
 #include <NetAPI.h>
 #include <cstdlib>
 #include <debug.hh>
 #include <errno.h>
+#ifndef OVERRIDE_COMPARTMENT
 #include <fail-simulator-on-error.h>
+#endif
 #include <futex.h>
 #include <mqtt.h>
 #include <sntp.h>
@@ -23,6 +24,9 @@
 #include <tick_macros.h>
 
 #include MQTT_BROKER_ANCHOR
+
+DECLARE_AND_DEFINE_ALLOCATOR_CAPABILITY(ProviderMallocCapability, 9 * 1024);
+#define MALLOC_CAPABILITY STATIC_SEALED_VALUE(ProviderMallocCapability)
 
 using CHERI::Capability;
 
@@ -34,7 +38,7 @@ constexpr size_t MQTTMaximumClientLength = 23;
 /// Prefix for MQTT client identifier
 constexpr std::string_view clientIDPrefix{"cheriotsmp"};
 /// Space for the random client ID.
-std::array<char, clientIDPrefix.size() + housekeeping_mqtt_unique_size>
+static std::array<char, clientIDPrefix.size() + housekeeping_mqtt_unique_size>
   clientID;
 static_assert(clientID.size() <= MQTTMaximumClientLength);
 
@@ -43,27 +47,30 @@ constexpr const size_t networkBufferSize    = 1024;
 constexpr const size_t incomingPublishCount = 2;
 constexpr const size_t outgoingPublishCount = 2;
 
-DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTConnectionRights,
+DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTConnectionRightsProvider,
                                          MQTT_BROKER_HOST,
                                          8883,
                                          ConnectionTypeTCP);
 
 constexpr std::string_view scheduleTopicPrefix{
   "cheriot-smartmeter/p/schedule/"};
-std::array<char, scheduleTopicPrefix.size() + housekeeping_mqtt_unique_size>
+static std::array<char,
+                  scheduleTopicPrefix.size() + housekeeping_mqtt_unique_size>
                            scheduleTopic;
 constexpr std::string_view varianceTopicPrefix{
   "cheriot-smartmeter/p/variance/"};
-std::array<char, varianceTopicPrefix.size() + housekeeping_mqtt_unique_size>
+static std::array<char,
+                  varianceTopicPrefix.size() + housekeeping_mqtt_unique_size>
                            varianceTopic;
 constexpr std::string_view publishTopicPrefix{"cheriot-smartmeter/p/update/"};
-std::array<char, publishTopicPrefix.size() + housekeeping_mqtt_unique_size>
+static std::array<char,
+                  publishTopicPrefix.size() + housekeeping_mqtt_unique_size>
   publishTopic;
 
-void __cheri_callback publishCallback(const char *topicName,
-                                      size_t      topicNameLength,
-                                      const void *payload,
-                                      size_t      payloadLength)
+static void __cheri_callback publishCallback(const char *topicName,
+                                             size_t      topicNameLength,
+                                             const void *payload,
+                                             size_t      payloadLength)
 {
 	// Check input pointers (can be skipped if the MQTT library is trusted)
 	Timeout t{MS_TO_TICKS(5000)};
@@ -179,7 +186,7 @@ int provider_entry()
 		MQTTConnection handle =
 		  mqtt_connect(&noTimeout,
 		               MALLOC_CAPABILITY,
-		               CONNECTION_CAPABILITY(MQTTConnectionRights),
+		               CONNECTION_CAPABILITY(MQTTConnectionRightsProvider),
 		               publishCallback,
 		               nullptr /* XXX should watch our ACK stream */,
 		               TAs,

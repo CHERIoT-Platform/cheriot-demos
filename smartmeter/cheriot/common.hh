@@ -9,12 +9,18 @@
  * @{
  */
 
-int __cheri_compartment("grid") grid_entry();
-int __cheri_compartment("housekeeping") housekeeping_entry();
-int __cheri_compartment("provider") provider_entry();
-int __cheri_compartment("sensor") sensor_entry();
-int __cheri_compartment("user") user_data_entry();
-int __cheri_compartment("user") user_net_entry();
+#ifdef OVERRIDE_COMPARTMENT
+#	define SMARTMETER_COMPARTMENT(x) __cheri_compartment(OVERRIDE_COMPARTMENT)
+#else
+#	define SMARTMETER_COMPARTMENT(x) __cheri_compartment(x)
+#endif
+
+int SMARTMETER_COMPARTMENT("grid") grid_entry();
+int SMARTMETER_COMPARTMENT("housekeeping") housekeeping_entry();
+int SMARTMETER_COMPARTMENT("provider") provider_entry();
+int SMARTMETER_COMPARTMENT("sensor") sensor_entry();
+int SMARTMETER_COMPARTMENT("user") user_data_entry();
+int SMARTMETER_COMPARTMENT("user") user_net_entry();
 
 /* @} */
 
@@ -26,7 +32,7 @@ int __cheri_compartment("user") user_net_entry();
 /**
  * Wait for housekeeping to perform initialization tasks
  */
-void __cheri_compartment("housekeeping") housekeeping_initial_barrier();
+void SMARTMETER_COMPARTMENT("housekeeping") housekeeping_initial_barrier();
 
 static constexpr size_t housekeeping_mqtt_unique_size = 8;
 
@@ -35,7 +41,8 @@ static constexpr size_t housekeeping_mqtt_unique_size = 8;
  * for us for use with client IDs and subscription topics.  We can ask it to
  * copy it out to a local buffer.
  */
-const char *__cheri_compartment("housekeeping") housekeeping_mqtt_unique_get();
+const char *SMARTMETER_COMPARTMENT("housekeeping")
+  housekeeping_mqtt_unique_get();
 
 /**
  * This pattern shows up in all our MQTT threads, so give it a short name.
@@ -50,7 +57,7 @@ const char *__cheri_compartment("housekeeping") housekeeping_mqtt_unique_get();
  *
  * Called by user
  */
-int __cheri_compartment("userJS")
+int SMARTMETER_COMPARTMENT("userJS")
   user_javascript_load(const uint8_t *bytecode, size_t size);
 
 /**
@@ -58,7 +65,7 @@ int __cheri_compartment("userJS")
  *
  * Called by user
  */
-int __cheri_compartment("userJS") user_javascript_run(/* XXX */);
+int SMARTMETER_COMPARTMENT("userJS") user_javascript_run(/* XXX */);
 
 /* @} */
 
