@@ -17,6 +17,9 @@ const uint8_t                      *claimed_bytecode;
 
 FlagLock lock;
 
+/*
+ * In monolith builds, this is _the_ compartment error handler!
+ */
 enum ErrorRecoveryBehaviour
 compartment_error_handler(struct ErrorState *frame, size_t mcause, size_t mtval)
 {

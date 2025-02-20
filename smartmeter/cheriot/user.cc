@@ -6,6 +6,9 @@
 #include <atomic>
 #include <debug.hh>
 #include <errno.h>
+#ifndef OVERRIDE_COMPARTMENT
+#include <fail-simulator-on-error.h>
+#endif
 #include <mqtt.h>
 #include <multiwaiter.h>
 #include <thread.h>
@@ -18,9 +21,9 @@
 using Debug = ConditionalDebug<true, "user">;
 using CHERI::Capability;
 
-uint32_t net_wake_count;
-uint32_t timebase_zero;
-uint16_t timebase_rate = 1;
+static uint32_t net_wake_count;
+static uint32_t timebase_zero;
+static uint16_t timebase_rate = 1;
 
 /// Thread entry point.
 int user_data_entry()
@@ -107,7 +110,7 @@ constexpr size_t MQTTMaximumClientLength = 23;
 /// Prefix for MQTT client identifier
 constexpr std::string_view clientIDPrefix{"cheriotsmu"};
 /// Space for the random client ID.
-std::array<char, clientIDPrefix.size() + housekeeping_mqtt_unique_size>
+static std::array<char, clientIDPrefix.size() + housekeeping_mqtt_unique_size>
   clientID;
 static_assert(clientID.size() <= MQTTMaximumClientLength);
 
@@ -116,7 +119,7 @@ constexpr const size_t networkBufferSize    = 4096;
 constexpr const size_t incomingPublishCount = 2;
 constexpr const size_t outgoingPublishCount = 2;
 
-DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTConnectionRights,
+DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTConnectionRightsUser,
                                          MQTT_BROKER_HOST,
                                          8883,
                                          ConnectionTypeTCP);
@@ -129,10 +132,10 @@ constexpr std::string_view timebaseTopicPrefix{
 std::array<char, timebaseTopicPrefix.size() + housekeeping_mqtt_unique_size>
   timebaseTopic;
 
-void __cheri_callback publishCallback(const char *topicName,
-                                      size_t      topicNameLength,
-                                      const void *payload,
-                                      size_t      payloadLength)
+static void __cheri_callback publishCallback(const char *topicName,
+                                             size_t      topicNameLength,
+                                             const void *payload,
+                                             size_t      payloadLength)
 {
 	// Check input pointers (can be skipped if the MQTT library is trusted)
 	Timeout t{MS_TO_TICKS(5000)};
@@ -231,7 +234,7 @@ int user_net_entry()
 		MQTTConnection handle =
 		  mqtt_connect(&noTimeout,
 		               MALLOC_CAPABILITY,
-		               CONNECTION_CAPABILITY(MQTTConnectionRights),
+		               CONNECTION_CAPABILITY(MQTTConnectionRightsUser),
 		               publishCallback,
 		               nullptr /* XXX should watch our ACK stream */,
 		               TAs,
