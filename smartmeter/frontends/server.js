@@ -72,8 +72,13 @@ expressApp.post('/postjs/:meter',
 
     if (vmresult.result === null)
     {
-      res.writeHead(500, "Internal Server Error");
-      res.end();
+      res.status(400).send(vmresult.error);
+      return;
+    }
+
+    if (vmresult.result.length > 4096)
+    {
+      res.status(400).send("Compiled bytecode exceeds client network buffer");
       return;
     }
 
@@ -86,7 +91,7 @@ expressApp.post('/postjs/:meter',
         if (error)
         {
           console.error("MQTT Publish", error)
-          res.status(500).send("Internal Server Error");
+          res.status(500).send(error);
         }
         else
         {

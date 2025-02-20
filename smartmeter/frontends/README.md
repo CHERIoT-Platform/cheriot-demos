@@ -16,10 +16,20 @@ but which include in-browser MQTT support and a(n again very skeletal) grid MQTT
 
 Some configuration is shared between the in-browser clients and the server; see `static/democonfig.js`.
 
-## Running
+## Building
 
 You'll want to ensure that you have NodeJS and NPM installed.
 Running `npm install` will install our JS dependencies.
+
+The `CodeMirror` editor we use to allow in-browser editing of JavaScript policy programs needs to be "bundled".
+Towards that end, run
+
+    node_modules/.bin/rollup ./static.in/user-editor.mjs -f es -o static/user-editor.js -p @rollup/plugin-node-resolve
+
+See https://codemirror.net/examples/bundle/ for details.
+
+## Running
+
 Then run
 
     node --experimental-require-module ./server.js
@@ -31,3 +41,5 @@ You can test the Microvium compilation code, on the contents of `./foo.js`, with
     curl --verbose -H "Content-Type: text/plain" --data-binary @./foo.js http://localhost:4000/postjs/${METER_ID}
 
 You can see the very basic grid client by visiting http://localhost:4000/static/grid.html
+
+Similarly, the user view will be at http://localhost:4000/static/user-editor.html

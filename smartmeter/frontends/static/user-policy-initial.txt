@@ -1,0 +1,1 @@
+../../cheriot/js/sample_policy.js
