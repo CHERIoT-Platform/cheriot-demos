@@ -15,7 +15,7 @@
 #include <debug.hh>
 #include <errno.h>
 #ifndef OVERRIDE_COMPARTMENT
-#include <fail-simulator-on-error.h>
+#	include <fail-simulator-on-error.h>
 #endif
 #include <futex.h>
 #include <mqtt.h>
@@ -25,7 +25,7 @@
 
 #include MQTT_BROKER_ANCHOR
 
-DECLARE_AND_DEFINE_ALLOCATOR_CAPABILITY(ProviderMallocCapability, 9 * 1024);
+DECLARE_AND_DEFINE_ALLOCATOR_CAPABILITY(ProviderMallocCapability, 24 * 1024);
 #define MALLOC_CAPABILITY STATIC_SEALED_VALUE(ProviderMallocCapability)
 
 using CHERI::Capability;

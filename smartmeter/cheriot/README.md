@@ -141,7 +141,7 @@ As with most everything, setting the timebase is done over MQTT.  Run something 
     $(date +%s --date="12 minutes ago") 10
     HERE
 
-to set the timebase zero (Z) to 10 minutes ago and the rate (R) to 10.
+to set the timebase zero (Z) to 12 minutes ago and the rate (R) to 10.
 (Making the timebase zero two _simulated hours_ ago.)
 
 ## Development
