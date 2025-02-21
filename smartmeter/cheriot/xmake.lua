@@ -91,7 +91,6 @@ compartment("user")
       {expand = false})
   end)
 
---[[
 compartment("monolith")
   add_includedirs(path.join(netdir,"include"))
 
@@ -116,7 +115,6 @@ compartment("monolith")
       },
       {expand = false})
   end)
---]]
 
 function mkthreads(overrideCompartmentName)
  return {
@@ -162,7 +160,7 @@ function mkthreads(overrideCompartmentName)
       trusted_stack_frames = 6
     },
     {
-      compartment = ovrrideCompartmentName or "provider",
+      compartment = overrideCompartmentName or "provider",
       priority = 1,
       entry_point = "provider_entry",
       -- TLS requires *huge* stacks!
@@ -213,10 +211,8 @@ mkfirmware("smartmeter",
   end,
   mkthreads(nil --[[ many compartments --]]))
 
---[[
 mkfirmware("smartmeter-monolith",
   function()
     add_deps("monolith")
   end,
   mkthreads("monolith"))
---]]

@@ -14,7 +14,7 @@
 #include <debug.hh>
 #include <errno.h>
 #ifndef OVERRIDE_COMPARTMENT
-#include <fail-simulator-on-error.h>
+#	include <fail-simulator-on-error.h>
 #endif
 #include <futex.h>
 #include <mqtt.h>
