@@ -3,6 +3,8 @@ import {javascript} from "@codemirror/lang-javascript"
 import {history, indentWithTab} from "@codemirror/commands"
 import {keymap, showPanel} from "@codemirror/view"
 
+var lastSubmittedEditorState;
+
 function panelCtor(view)
 {
   const dom = document.createElement("div");
@@ -11,6 +13,17 @@ function panelCtor(view)
   submitButton.type = "submit";
   submitButton.innerHTML = "Compile and run!";
   dom.append(submitButton);
+
+  const revertButton = document.createElement("button");
+  revertButton.type = "button";
+  revertButton.innerHTML = "Revert to last submitted version";
+  revertButton.addEventListener("click", (event) =>
+    {
+      view.setState(lastSubmittedEditorState);
+    }
+  );
+
+  dom.append(revertButton);
 
   const resultField = document.createElement("div");
   resultField.id = "theResult";
@@ -39,8 +52,6 @@ const initialText = await initialTextResponse.text();
 const theForm = document.getElementById("theForm");
 const meterIdentityInput = document.getElementById("meterIdentity");
 
-console.log(meterIdentityInput);
-
 let editor = new EditorView({
   extensions: [ basicSetup
               , history()
@@ -52,6 +63,8 @@ let editor = new EditorView({
   doc: initialText,
 })
 
+lastSubmittedEditorState = editor.state;
+
 theForm.addEventListener("submit", (event) =>
   {
     event.preventDefault();
@@ -59,15 +72,18 @@ theForm.addEventListener("submit", (event) =>
     const resultField = document.getElementById("theResult");
     const meterIdentity = meterIdentityInput.value;
 
+    const editorState = editor.state;
+
     fetch(`/postjs/${meterIdentity}`,
           { method: "POST",
-            body: editor.state.doc,
+            body: editorState.doc,
             headers: { "Content-Type": "text/plain" }
           })
       .then((response) => {
         if (response.ok)
         {
           theResult.innerHTML = "OK!";
+          lastSubmittedEditorState = editorState;
         }
         else
         {
