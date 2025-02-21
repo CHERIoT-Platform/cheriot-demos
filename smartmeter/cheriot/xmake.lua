@@ -104,14 +104,12 @@ compartment("monolith")
   add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt")
 
   on_load(function(target)
-    target:add("defines", "OVERRIDE_COMPARTMENT=\"monolith\"")
+    target:add("defines", "MONOLITH_BUILD_WITHOUT_SECURITY")
     target:values_set("shared_objects",
       { grid_planned_outage = 12
       , grid_request = 12
       , provider_schedule = 104
       , provider_variance = 20
-      , sensor_data = 40
-      , userJS_snapshot = 168
       },
       {expand = false})
   end)

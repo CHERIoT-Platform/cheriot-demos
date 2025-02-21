@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <debug.hh>
 #include <errno.h>
-#ifndef OVERRIDE_COMPARTMENT
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 #	include <fail-simulator-on-error.h>
 #endif
 #include <futex.h>
