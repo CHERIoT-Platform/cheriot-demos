@@ -1,13 +1,14 @@
 // Copyright Microsoft and CHERIoT Contributors.
 // SPDX-License-Identifier: MIT
 
-#define MALLOC_QUOTA 25000
+#define CHERIOT_NO_AMBIENT_MALLOC
+
 #include "user.hh"
 #include <atomic>
 #include <debug.hh>
 #include <errno.h>
 #ifndef OVERRIDE_COMPARTMENT
-#include <fail-simulator-on-error.h>
+#	include <fail-simulator-on-error.h>
 #endif
 #include <mqtt.h>
 #include <multiwaiter.h>
@@ -16,6 +17,9 @@
 #include <timeout.hh>
 
 #include MQTT_BROKER_ANCHOR
+
+DECLARE_AND_DEFINE_ALLOCATOR_CAPABILITY(UserMallocCapability, 24 * 1024);
+#define MALLOC_CAPABILITY STATIC_SEALED_VALUE(UserMallocCapability)
 
 /// Expose debugging features unconditionally for this compartment.
 using Debug = ConditionalDebug<true, "user">;
@@ -158,7 +162,8 @@ static void __cheri_callback publishCallback(const char *topicName,
 
 	if (topicView == std::string_view{jsTopic.data(), jsTopic.size()})
 	{
-		void *newPayload = malloc(payloadLength);
+		void *newPayload = blocking_forever<heap_allocate>(
+		  MALLOC_CAPABILITY, payloadLength, AllocateWaitRevocationNeeded);
 
 		if (!Capability{newPayload}.is_valid())
 		{
@@ -171,7 +176,7 @@ static void __cheri_callback publishCallback(const char *topicName,
 		                     payloadLength);
 
 		// The other compartment has claimed it; drop our claim.
-		free(newPayload);
+		heap_free(MALLOC_CAPABILITY, newPayload);
 
 		net_wake_count++;
 		futex_wake(&net_wake_count, UINT32_MAX);
