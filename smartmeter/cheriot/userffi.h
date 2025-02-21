@@ -23,8 +23,12 @@ enum userjs_snapshot_index
 
 int32_t read_from_snapshot(int32_t type, int32_t index)
 {
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, false, false, false);
+#else
+	auto *snapshots = &theUserjsSnapshot;
+#endif
 
 	switch (type)
 	{

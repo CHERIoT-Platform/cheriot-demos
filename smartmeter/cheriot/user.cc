@@ -7,7 +7,7 @@
 #include <atomic>
 #include <debug.hh>
 #include <errno.h>
-#ifndef OVERRIDE_COMPARTMENT
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 #	include <fail-simulator-on-error.h>
 #endif
 #include <mqtt.h>
@@ -29,6 +29,10 @@ static uint32_t net_wake_count;
 static uint32_t timebase_zero;
 static uint16_t timebase_rate = 1;
 
+#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
+userjs_snapshot theUserjsSnapshot;
+#endif
+
 /// Thread entry point.
 int user_data_entry()
 {
@@ -36,8 +40,13 @@ int user_data_entry()
 
 	static constexpr size_t nEvents = 6;
 
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 	auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data, sensor_data, true, false, false, false);
+#else
+	auto *sensorData = &theSensorData;
+#endif
+
 	auto gridOutage = SHARED_OBJECT_WITH_PERMISSIONS(
 	  grid_planned_outage, grid_planned_outage, true, false, false, false);
 	auto gridRequest = SHARED_OBJECT_WITH_PERMISSIONS(
@@ -61,8 +70,12 @@ int user_data_entry()
 		Debug::Invariant(ret == 0, "Could not create multiwaiter object");
 	}
 
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, true, false, false);
+#else
+	auto *snapshots = &theUserjsSnapshot;
+#endif
 
 	while (true)
 	{

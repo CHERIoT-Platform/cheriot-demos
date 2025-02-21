@@ -17,6 +17,10 @@
 
 using Debug = ConditionalDebug<true, "sensor">;
 
+#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
+sensor_data theSensorData;
+#endif
+
 int sensor_entry()
 {
 	int i = 0;
@@ -24,8 +28,12 @@ int sensor_entry()
 	housekeeping_initial_barrier();
 	Debug::log("initialization barrier down");
 
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 	auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data, sensor_data, true, true, false, false);
+#else
+	auto *sensorData = &theSensorData;
+#endif
 
 	while (1)
 	{

@@ -20,3 +20,11 @@ struct userjs_snapshot
 };
 static_assert(sizeof(struct userjs_snapshot) == 168,
               "userjs_snapshot object bad size; update xmake.lua");
+
+/*
+ * In a compartmentalized build, we use static shared objects for communication.
+ * In a monolithic build, just use globals, as we would in a non-CHERI system.
+ */
+#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
+extern userjs_snapshot theUserjsSnapshot;
+#endif

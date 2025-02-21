@@ -9,8 +9,8 @@
  * @{
  */
 
-#ifdef OVERRIDE_COMPARTMENT
-#	define SMARTMETER_COMPARTMENT(x) __cheri_compartment(OVERRIDE_COMPARTMENT)
+#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
+#	define SMARTMETER_COMPARTMENT(x) __cheri_compartment("monolith")
 #else
 #	define SMARTMETER_COMPARTMENT(x) __cheri_compartment(x)
 #endif
@@ -213,3 +213,11 @@ static_assert(sizeof(provider_variance) == 20,
               "provider_variance object bad size; update xmake.lua");
 
 /* @} */
+
+/*
+ * In a compartmentalized build, we use static shared objects for communication.
+ * In a monolithic build, just use globals, as we would in a non-CHERI system.
+ */
+#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
+extern sensor_data theSensorData;
+#endif
