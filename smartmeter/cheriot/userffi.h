@@ -15,10 +15,11 @@ enum userjs_snapshot_index
 	DATA_GRID_REQUEST_SEVERITY            = 7,
 	DATA_PROVIDER_SCHEDULE_TIMESTAMP_DAY  = 8,
 	DATA_PROVIDER_SCHEDULE_RATE           = 9,
-	DATA_PROVIDER_VARIANCE_TIMESTAMP_BASE = 10,
-	DATA_PROVIDER_VARIANCE_START          = 11,
-	DATA_PROVIDER_VARIANCE_DURATION       = 12,
-	DATA_PROVIDER_VARIANCE_RATE           = 13,
+	DATA_PROVIDER_SCHEDULE_RATE_ARRAY     = 10,
+	DATA_PROVIDER_VARIANCE_TIMESTAMP_BASE = 11,
+	DATA_PROVIDER_VARIANCE_START          = 12,
+	DATA_PROVIDER_VARIANCE_DURATION       = 13,
+	DATA_PROVIDER_VARIANCE_RATE           = 14,
 };
 
 int32_t read_from_snapshot(int32_t type, int32_t index)
@@ -27,7 +28,7 @@ int32_t read_from_snapshot(int32_t type, int32_t index)
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, false, false, false);
 #else
-	auto *snapshots = &theUserjsSnapshot;
+	auto *snapshots = &theData.userjs_snapshot;
 #endif
 
 	switch (type)
@@ -62,6 +63,9 @@ int32_t read_from_snapshot(int32_t type, int32_t index)
 				return 0;
 			}
 			return snapshots->provider_schedule.rate[index];
+		case DATA_PROVIDER_SCHEDULE_RATE_ARRAY:
+			register_write(index, &snapshots->provider_schedule.rate);
+			return 0;
 		case DATA_PROVIDER_VARIANCE_TIMESTAMP_BASE:
 			return snapshots->provider_variance.timestamp_base;
 		case DATA_PROVIDER_VARIANCE_START:

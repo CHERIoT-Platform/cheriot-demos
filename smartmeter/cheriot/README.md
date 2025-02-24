@@ -148,5 +148,5 @@ to set the timebase zero (Z) to 12 minutes ago and the rate (R) to 10.
 
 ### Changing the JS FFI
 
-If you change the information cached and exposed in the `userJS_snapshot` structure (defined in `user.hh`),
+If you change the information cached and exposed in the `userJS_snapshot` structure (also defined in `common.hh`),
 you'll want to update the constants in `js/ffi.js`, tweak `js/ffigen.js`, and run `microvium ffigen.js` (in the `js/` directory) to rebuild `userffi.h`.

@@ -18,7 +18,7 @@
 using Debug = ConditionalDebug<true, "sensor">;
 
 #ifdef MONOLITH_BUILD_WITHOUT_SECURITY
-sensor_data theSensorData;
+struct mergedData theData;
 #endif
 
 int sensor_entry()
@@ -32,7 +32,7 @@ int sensor_entry()
 	auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data, sensor_data, true, true, false, false);
 #else
-	auto *sensorData = &theSensorData;
+	auto *sensorData = &theData.sensor_data;
 #endif
 
 	while (1)
