@@ -91,9 +91,11 @@ int user_javascript_load(const uint8_t *bytecode, size_t size)
 	// VM to execute it.
 	////////////////////////////////////////////////////////////////////////
 
-	Debug::log("{} bytes of heap quota available",
-	           heap_quota_remaining(JAVASCRIPT_MALLOC));
 	heap_free(JAVASCRIPT_MALLOC, const_cast<uint8_t *>(claimed_bytecode));
+
+	Debug::log("{} bytes of heap quota available after release",
+	           heap_quota_remaining(JAVASCRIPT_MALLOC));
+
 	heap_claim(JAVASCRIPT_MALLOC, const_cast<uint8_t *>(bytecode));
 	claimed_bytecode = bytecode;
 

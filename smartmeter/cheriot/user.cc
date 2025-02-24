@@ -3,7 +3,7 @@
 
 #define CHERIOT_NO_AMBIENT_MALLOC
 
-#include "user.hh"
+#include "common.hh"
 #include <atomic>
 #include <debug.hh>
 #include <errno.h>
@@ -29,10 +29,6 @@ static uint32_t net_wake_count;
 static uint32_t timebase_zero;
 static uint16_t timebase_rate = 1;
 
-#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
-userjs_snapshot theUserjsSnapshot;
-#endif
-
 /// Thread entry point.
 int user_data_entry()
 {
@@ -44,8 +40,10 @@ int user_data_entry()
 	auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data, sensor_data, true, false, false, false);
 #else
-	auto *sensorData = &theSensorData;
+	auto *sensorData = &theData.sensor_data;
 #endif
+
+	Debug::log("sensor structure is {}", reinterpret_cast<void *>(sensorData));
 
 	auto gridOutage = SHARED_OBJECT_WITH_PERMISSIONS(
 	  grid_planned_outage, grid_planned_outage, true, false, false, false);
@@ -74,8 +72,10 @@ int user_data_entry()
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, true, false, false);
 #else
-	auto *snapshots = &theUserjsSnapshot;
+	auto *snapshots = &theData.userjs_snapshot;
 #endif
+
+	Debug::log("snapshot structure is {}", reinterpret_cast<void *>(snapshots));
 
 	while (true)
 	{

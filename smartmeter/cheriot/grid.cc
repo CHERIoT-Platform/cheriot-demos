@@ -223,7 +223,7 @@ int grid_entry()
 			auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
 			  sensor_data, sensor_data, true, false, false, false);
 #else
-			auto *sensorData = &theSensorData;
+			auto *sensorData = &theData.sensor_data;
 #endif
 
 			sensor_data localSensorData = {0};
