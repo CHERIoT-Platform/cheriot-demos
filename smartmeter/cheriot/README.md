@@ -125,7 +125,7 @@ which indicates an outage starting in 4 hours and lasting for 6 thereafter.
 
 ### Transmitting a grid request
 
-To inform the device of a requset for more or less production, run something like the following,
+To inform the device of a request for more or less production, run something like the following,
 which indicates an immediate request, lasting for 5 minutes, to reduce consumption (or increase generation).
 
     mosquitto_pub -h test.mosquitto.org -p 1883 -q 1 -t cheriot-smartmeter/g/request/${METER_ID} -s << HERE
@@ -165,6 +165,11 @@ As with most everything, setting the timebase is done over MQTT.  Run something 
 
 to set the timebase zero (Z) to 12 minutes ago and the rate (R) to 10.
 (Making the timebase zero two _simulated hours_ ago.)
+
+You _may_ wish to have the broker retain this message, so that subsequent subscribers will also be informed.
+To do so, add `-r` (or `--retain`) to the command line (before the `<<`).
+MQTT message retention is entirely at the discretion of the server, so may not be reliable.
+Don't abuse public resources.
 
 ## Development
 

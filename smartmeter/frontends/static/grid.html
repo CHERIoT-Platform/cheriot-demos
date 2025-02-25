@@ -7,7 +7,33 @@
  </head>
  <body>
    <h1>Grid Operator View</h1>
+
+    <form id="meterIDForm">
+      <label>Meter Identity String:</label>
+      <input type="text" id="meterIdentity"
+             required autocomplete="off"
+             pattern="[A-Za-z0-9]{8}" placeholder="ABCDEFGH" />
+      <button id="meterIDSubmit" type="submit" disabled>Set</button>
+    </form>
+
     <h2>Consumption report</h2>
-     <div id="latest-update"/>
+     <div id="latest-update"></div>
+
+    <h2>Send Grid Alert</h2>
+     <form id="gridAlertForm">
+       For the next
+         <input id="gridAlertDuration" type="number" min=0 max=10 step=1 value=1 />
+       minutes, tell the house to
+         <select id="gridAlertSelect">
+           <option value="-1024">Reduce consumption (too little power on grid)</option>
+           <option value="-512">Modestly reduce reduction</option>
+           <option value="0" selected>Carry on (grid OK)</option>
+           <option value="512">Modestly increase consumption</option>
+           <option value="1024">Increase consumption (excess power on grid)</option>
+         </select>
+       .
+       <button id="gridAlertSubmit" type="submit" disabled>Publish!</button>
+     </form>
+
  </body>
 </html>
