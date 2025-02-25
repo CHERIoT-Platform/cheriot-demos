@@ -19,6 +19,9 @@ option("broker-host")
 option("broker-anchor")
   set_default("mosquitto.org.h")
 
+option("unique-id")
+  set_default("random")
+
 rule("smartmeter.mqtt")
   on_load(function (target)
     -- Note: port 8883 to be encrypted and tolerating unautenticated connections
@@ -31,12 +34,20 @@ rule("smartmeter.mqtt")
     target:add("defines", table.concat({"MQTT_BROKER_ANCHOR=\"", tostring(broker_anchor), "\""}))
   end)
 
+rule("housekeeping.unique-id")
+  on_load(function (target)
+    target:add('options', "unique-id")
+    local unique_id = get_config("unique-id")
+    target:add("defines", table.concat({"MQTT_UNIQUE_ID=\"", tostring(unique_id), "\""}))
+  end)
+
 compartment("housekeeping")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("housekeeping.cc")
 
-  add_rules("cheriot.network-stack.ipv6")
+  add_rules("cheriot.network-stack.ipv6", "housekeeping.unique-id")
+
 
 compartment("sensor")
   add_includedirs(path.join(netdir,"include"))
@@ -101,7 +112,7 @@ compartment("monolith")
   add_files("userJS.cc")
   add_files("user.cc")
 
-  add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt")
+  add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt", "housekeeping.unique-id")
 
   on_load(function(target)
     target:add("defines", "MONOLITH_BUILD_WITHOUT_SECURITY")
