@@ -3,6 +3,8 @@ import {javascript} from "@codemirror/lang-javascript"
 import {history, indentWithTab} from "@codemirror/commands"
 import {keymap, showPanel} from "@codemirror/view"
 
+import * as democonfig from "./democonfig.mjs";
+
 var lastSubmittedEditorState;
 
 function panelCtor(view)
@@ -51,6 +53,11 @@ const initialText = await initialTextResponse.text();
 
 const theForm = document.getElementById("theForm");
 const meterIdentityInput = document.getElementById("meterIdentity");
+
+if (democonfig.DEFAULT_METER_ID !== null)
+{
+  meterIdentityInput.value = democonfig.DEFAULT_METER_ID;
+}
 
 let editor = new EditorView({
   extensions: [ basicSetup
