@@ -11,8 +11,10 @@
 
 #include <NetAPI.h>
 #include <cstdlib>
+#include <cstring>
 #include <debug.hh>
 #include <errno.h>
+#include <string_view>
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 #	include <fail-simulator-on-error.h>
 #endif
@@ -25,7 +27,37 @@
 using Debug = ConditionalDebug<true, "housekeeping">;
 
 std::atomic<uint32_t> initialized;
+
 char                  mqttUnique[8];
+
+constexpr bool random_id = std::string_view(MQTT_UNIQUE_ID) == "random";
+// MQTT_UNIQUE_ID must either be "random" or axactly 8 A-Za-z0-9 characters
+// (no null byte)
+constexpr bool is_valid_id(std::string_view id)
+{
+	if (id == "random")
+		return true;
+
+	if (id.size() != sizeof(mqttUnique))
+	{
+		return false;
+	}
+
+	for (char c : id)
+	{
+		switch (c)
+		{
+			default:
+				return false;
+			case '0' ... '9':
+			case 'a' ... 'z':
+			case 'A' ... 'Z':
+				continue;
+		}
+	}
+	return true;
+}
+static_assert(is_valid_id(MQTT_UNIQUE_ID));
 
 static void do_sntp()
 {
@@ -78,7 +110,13 @@ int housekeeping_entry()
 {
 	Debug::log("entry");
 
-	mqtt_generate_client_id(mqttUnique, sizeof(mqttUnique));
+	if constexpr(random_id) {
+		mqtt_generate_client_id(mqttUnique, sizeof(mqttUnique));
+	} else {
+		// copy the configured MQTT_UNIQUE_ID excluding the null byte
+		memcpy(mqttUnique, MQTT_UNIQUE_ID, sizeof(mqttUnique));
+	}
+
 	{
 		std::string_view mqttUniqueView{mqttUnique, sizeof(mqttUnique)};
 		Debug::log("MQTT Unique: {}", mqttUniqueView);
