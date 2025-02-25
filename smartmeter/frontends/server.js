@@ -21,7 +21,7 @@ function compileMVM(sourceText)
   Microvium.addDefaultGlobals(vm);
 
   const importDependency = Microvium.nodeStyleImporter(vm,
-    { basedir: "./mjs"
+    { basedir: "./device-js"
     });
 
   try {
