@@ -24,7 +24,7 @@ Running `npm install` will install our JS dependencies.
 The `CodeMirror` editor we use to allow in-browser editing of JavaScript policy programs needs to be "bundled".
 Towards that end, run
 
-    node_modules/.bin/rollup ./static.in/user-editor.mjs -f es -o static/user-editor.js -p @rollup/plugin-node-resolve
+    ./node_modules/.bin/rollup --config ./static.in/user-editor.rollup-config.mjs
 
 See https://codemirror.net/examples/bundle/ for details.
 
