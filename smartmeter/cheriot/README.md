@@ -45,6 +45,28 @@ Similarly, information from the grid controller and providers are also exposed v
 These shared objects all contain futex words used as version identifiers and update-in-progress flags,
 so it is possible to get stable reads of their contents and to wait for updates.
 
+## Building The CHERIoT Bits
+
+The build proceeds via the familiar CHERIoT-RTOS `xmake` system.
+
+### Overriding Source Dependencies
+
+By default, the build will use the RTOS and network stack submodules of the containing repository.
+You can use a different RTOS source tree by setting the ``CHERIOT_RTOS_SDK`` environment variable.
+Similarly, a different network stack source tree can be called for with ``CHERIOT_NETWORK_STACK``.
+
+### Non-Default MQTT Broker
+
+By default, the device will use `test.mosquitto.org` as the broker, and
+the build expects the file named `mosquitto.org.h` to hold the appropriate TLS X.509 trust anchors.
+These, respectively, can be overridden with the `--broker-host` and `--broker-anchor` options to `xmake config`.
+
+### Static Device Identifier
+
+Left to its own devices, the demo will generate a random 8-character identifier for itself.
+This can instead be baked into the firmware by passing `--unique-id` to `xmake config`.
+The value must be exactly 8 ASCII alphanumeric characters (`[A-Za-z0-9]`).
+
 ## Running
 
 Most MQTT messages are composed of space-separated integers,
