@@ -1,0 +1,46 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <title>Provider View</title>
+  <script src="/mqttjs/mqtt.min.js"></script> <!-- Brings "mqtt" into top-level scope -->
+  <script src="/chartjs/chart.umd.js"></script> <!-- Brings "Chart" and others into top-level scope -->
+  <script src="/chartjs/chartjs-plugin-annotation.min.js"></script>
+  <script type="module" src="provider.js"></script>
+ </head>
+ <body>
+   <h1>Provider Operator View</h1>
+
+    <form id="meterIDForm">
+      <label>Meter Identity String:</label>
+      <input type="text" id="meterIdentity"
+             required autocomplete="off"
+             pattern="[A-Za-z0-9]{8}" placeholder="ABCDEFGH" />
+      <button id="meterIDSubmit" type="submit" disabled>Set</button>
+    </form>
+
+    <h2>Consumption report</h2>
+     <div id="latest-update"></div>
+
+    <h2>Set Power Rates</h2>
+     <div style="height: 60vh; width: 80vw;"><canvas id="powerRateChart"></canvas></div>
+
+     <form id="providerRateForm">
+       <label for="providerRateToday">Today's schedule</label>
+       <select id="providerRateToday">
+         <option value="flat" selected>Flat rate</option>
+         <option value="summerwk">Summer Weekday</option>
+         <option value="winterwk">Winter Weekday</option>
+         <option value="ulowe">Ultra-Low-Overnight Weekend</option>
+       </select>
+       <label for="providerRateTomorrow">Tomorrow's schedule</label>
+       <select id="providerRateTomorrow">
+         <option value="flat">Flat rate</option>
+         <option value="summerwk" selected>Summer Weekday</option>
+         <option value="winterwk">Winter Weekday</option>
+         <option value="ulowe">Ultra-Low-Overnight Weekend</option>
+       </select>
+       <button id="providerRateSubmit" type="submit" disabled>Publish!</button>
+     </form>
+
+ </body>
+</html>
