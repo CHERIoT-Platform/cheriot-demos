@@ -151,6 +151,11 @@ export const led_set = vmImport(17);
  */
 export const read_from_snapshot = vmImport(18);
 
+/**
+ * Write string to UART
+ */
+export const uart_write = vmImport(19)
+
 export const DATA_SENSOR_TIMESTAMP = 1;
 export const DATA_SENSOR_SAMPLE = 2;
 export const DATA_GRID_OUTAGE_START = 3;
