@@ -23,6 +23,7 @@
 #include <sntp.h>
 #include <thread.h>
 #include <tick_macros.h>
+#include <platform-pinmux.hh>
 
 using Debug = ConditionalDebug<true, "housekeeping">;
 
@@ -109,6 +110,16 @@ const char *housekeeping_mqtt_unique_get()
 int housekeeping_entry()
 {
 	Debug::log("entry");
+
+	Debug::log("Configuring pinmux");
+	auto pinSinks = MMIO_CAPABILITY(SonataPinmux::PinSinks, pinmux_pins_sinks);
+	pinSinks->get(SonataPinmux::PinSink::pmod0_2).select(4); // uart1 tx -> pmod0_2
+	auto blockSinks = MMIO_CAPABILITY(SonataPinmux::BlockSinks, pinmux_block_sinks);
+	blockSinks->get(SonataPinmux::BlockSink::uart_1_rx).select(5); // pmod0_3 -> uart1 rx
+
+	Debug::log("Initialising UART1 with baud 9600");
+	auto uart1 = MMIO_CAPABILITY(Uart, uart1);
+	uart1->init(9600);
 
 	if constexpr(random_id) {
 		mqtt_generate_client_id(mqttUnique, sizeof(mqttUnique));
