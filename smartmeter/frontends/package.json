@@ -11,6 +11,8 @@
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.3",
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "chart.js": "^4.4.8",
+    "chartjs-plugin-annotation": "^3.1.0",
     "codemirror": "^6.0.1",
     "express": "^4.21.2",
     "microvium": "^8.0.0",

@@ -73,7 +73,10 @@ gridAlertForm.addEventListener("submit", (event) =>
     console.log(`Publishing grid alert: ${lastMeterId} ${now} ${duration} ${value}`);
     if (mqttClient)
     {
-      mqttClient.publish(`cheriot-smartmeter/g/request/${lastMeterId}`, `${now} ${duration} ${value}`);
+      mqttClient.publish(
+        `cheriot-smartmeter/g/request/${lastMeterId}`,
+        `${now} ${duration} ${value}`,
+        { qos: 1 });
     }
   });
 

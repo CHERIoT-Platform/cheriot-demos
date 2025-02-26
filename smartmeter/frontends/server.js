@@ -59,8 +59,12 @@ mqttClient.on('reconnect', (error) => { console.log("MQTT Reconnect", error) });
 
 const expressApp = express()
 
+// Static resources, ours and those from NPM
 expressApp.use('/static', express.static('static'))
 expressApp.use('/mqttjs', express.static('node_modules/mqtt/dist'))
+expressApp.use('/chartjs', express.static('node_modules/chart.js/dist'))
+expressApp.use('/chartjs',
+  express.static('node_modules/chartjs-plugin-annotation/dist'))
 
 expressApp.post('/postjs/:meter',
   (req, res, next) => { console.log("POST JS", req.params.meter); next(); },

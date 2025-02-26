@@ -185,7 +185,7 @@ static_assert(sizeof(grid_request) == 12,
 struct provider_schedule_payload
 {
 	uint32_t timestamp_day; // Start of rate array; "today's midnight"
-	int16_t  rate[48];      // Hourly rates, today then tomorrow, p/kWh
+	int16_t  rate[48];      // Hourly rates, today then tomorrow, centipence/kWh
 };
 
 using provider_schedule = FutexVersioned<provider_schedule_payload>;

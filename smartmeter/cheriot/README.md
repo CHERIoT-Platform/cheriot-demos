@@ -93,10 +93,12 @@ Run something like the following to denote a time-of-use schedule for today
 (that is, starting at the most recent past midnight)
 and a flat rate schedule for tomorrow.
 
+The units here are intended to be centi-pence per kWh, which should give a realistic amount of precision.
+
     mosquitto_pub -h test.mosquitto.org -p 1883 -q 1 -t cheriot-smartmeter/p/schedule/${METER_ID} -s << HERE
     $(date +%s --date="")
-    7 7 7 7 7 7 7 7 12 12 12 10 10 10 10 12 12 12 7 7 7 7 7 7
-    8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8
+    760 760 760 760 760 760 760 760 1580 1580 1580 1220 1220 1220 1220 1580 1580 1580 760 760 760 760 760 760
+    760 760 760 760 760 760 760 760  760  760  760  760  760  760  760  760  760  760 760 760 760 760 760 760
     HERE
 
 ### Setting a provider variance
