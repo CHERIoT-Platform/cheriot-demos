@@ -177,14 +177,19 @@ int provider_entry()
 	HOUSEKEEPING_MQTT_CONCAT(scheduleTopic, scheduleTopicPrefix, mqttName);
 	HOUSEKEEPING_MQTT_CONCAT(varianceTopic, varianceTopicPrefix, mqttName);
 
+	Debug::log("Listening on {}",
+	           std::string_view{scheduleTopic.data(), scheduleTopic.size()});
+
 	while (true)
 	{
 		int tick = 0;
 
 		Debug::log("Connecting to MQTT broker...");
 
+		Timeout connectTimeout{MS_TO_TICKS(30000)};
+
 		MQTTConnection handle =
-		  mqtt_connect(&noTimeout,
+		  mqtt_connect(&connectTimeout,
 		               MALLOC_CAPABILITY,
 		               CONNECTION_CAPABILITY(MQTTConnectionRightsProvider),
 		               publishCallback,
@@ -205,7 +210,7 @@ int provider_entry()
 
 		Debug::log("Connected to MQTT broker!");
 
-		ret = mqtt_subscribe(&noTimeout,
+		ret = mqtt_subscribe(&connectTimeout,
 		                     handle,
 		                     1, // QoS 1 = delivered at least once
 		                     scheduleTopic.data(),
@@ -218,7 +223,7 @@ int provider_entry()
 		}
 
 		// XXX clobbers packet ID; we should be watching our ACK stream
-		ret = mqtt_subscribe(&noTimeout,
+		ret = mqtt_subscribe(&connectTimeout,
 		                     handle,
 		                     1, // QoS 1 = delivered at least once
 		                     varianceTopic.data(),
