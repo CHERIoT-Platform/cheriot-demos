@@ -138,7 +138,7 @@ struct FutexVersioned
 struct sensor_data_payload
 {
 	uint32_t timestamp;  // of samples[0], each next a minute back in the past
-	uint32_t samples[8]; // The past few minutes of sensor data
+	int32_t  samples[8]; // The past few minutes of sensor data
 };
 
 using sensor_data = FutexVersioned<sensor_data_payload>;
