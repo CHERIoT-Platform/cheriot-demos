@@ -14,6 +14,9 @@
 #include <futex.h>
 #include <sntp.h>
 #include <thread.h>
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
+#	include <fail-simulator-on-error.h>
+#endif
 
 using Debug = ConditionalDebug<true, "sensor">;
 
