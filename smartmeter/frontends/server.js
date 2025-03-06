@@ -65,6 +65,8 @@ expressApp.use('/static', express.static('static'))
 expressApp.use('/mqttjs', express.static('node_modules/mqtt/dist'))
 expressApp.use('/chartjs', express.static('node_modules/chart.js/dist'))
 expressApp.use('/chartjs',
+  express.static('node_modules/chartjs-adapter-date-fns/dist'))
+expressApp.use('/chartjs',
   express.static('node_modules/chartjs-plugin-annotation/dist'))
 
 expressApp.post('/postjs/:meter',
