@@ -103,6 +103,7 @@ compartment("user")
   end)
 
 compartment("monolith")
+  set_default("false")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("housekeeping.cc")
@@ -157,7 +158,7 @@ function mkthreads(overrideCompartmentName)
       compartment = overrideCompartmentName or "sensor",
       priority = 1,
       entry_point = "sensor_entry",
-      stack_size = 768,
+      stack_size = 2048,
       trusted_stack_frames = 3
     },
     {
@@ -220,8 +221,8 @@ mkfirmware("smartmeter",
   end,
   mkthreads(nil --[[ many compartments --]]))
 
-mkfirmware("smartmeter-monolith",
-  function()
-    add_deps("monolith")
-  end,
-  mkthreads("monolith"))
+-- mkfirmware("smartmeter-monolith",
+--   function()
+--     add_deps("monolith")
+--   end,
+--   mkthreads("monolith"))
