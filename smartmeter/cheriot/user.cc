@@ -249,8 +249,10 @@ int user_net_entry()
 
 		Debug::log("Connecting to MQTT broker...");
 
+		Timeout connectTimeout{MS_TO_TICKS(30000)};
+
 		MQTTConnection handle =
-		  mqtt_connect(&noTimeout,
+		  mqtt_connect(&connectTimeout,
 		               MALLOC_CAPABILITY,
 		               CONNECTION_CAPABILITY(MQTTConnectionRightsUser),
 		               publishCallback,
@@ -271,7 +273,7 @@ int user_net_entry()
 
 		Debug::log("Connected to MQTT broker!");
 
-		ret = mqtt_subscribe(&noTimeout,
+		ret = mqtt_subscribe(&connectTimeout,
 		                     handle,
 		                     1, // QoS 1 = delivered at least once
 		                     jsTopic.data(),
@@ -283,7 +285,7 @@ int user_net_entry()
 			goto retry;
 		}
 
-		ret = mqtt_subscribe(&noTimeout,
+		ret = mqtt_subscribe(&connectTimeout,
 		                     handle,
 		                     1, // QoS 1 = delivered at least once
 		                     timebaseTopic.data(),
