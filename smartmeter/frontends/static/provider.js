@@ -65,7 +65,8 @@ mqttClient.on("message", (t, m) =>
     console.log("Message", t.toString(), mString);
     if (t.startsWith("cheriot-smartmeter/p/update"))
     {
-      document.getElementById("latest-update").textContent = mString;
+      const report = /^\s*(\d+)\s+(\d+)\s+.*$/.exec(mString);
+      updateConsumptionData(report);
     }
     else if (t.startsWith("cheriot-smartmeter/u/timebase"))
     {
@@ -80,6 +81,45 @@ mqttClient.on("connect", () =>
   {
     console.log("Connected");
   });
+
+/////
+// Consumption chart
+/////
+
+let consumptionData = [];
+
+const consumptionChart = new Chart(document.getElementById("consumptionChart"),
+  { type: 'line'
+  , data:
+    { datasets: [ {label: 'Draw', data: consumptionData } ] }
+  , options:
+    { scales:
+      { x:
+        { title:
+          { display: true
+          , text: "Time"
+          }
+        , type: 'time'
+        , time:
+          { minUnit: 'second' }
+        }
+      }
+    }
+  });
+
+function updateConsumptionData(report)
+{
+  const now = parseInt(report[1]) * 1000; // JS likes to work in mSec
+
+  // Assume we haven't missed anything
+  consumptionData.push({ x: now, y: parseInt(report[2]) })
+
+  // Prune old data
+  consumptionData.splice(1, consumptionData.findIndex(
+    (dataElement) => dataElement.x >= now - 7200000) - 1);
+
+  consumptionChart.update();
+}
 
 /////
 // Rate data and chart

@@ -4,6 +4,7 @@
   <title>Provider View</title>
   <script src="/mqttjs/mqtt.min.js"></script> <!-- Brings "mqtt" into top-level scope -->
   <script src="/chartjs/chart.umd.js"></script> <!-- Brings "Chart" and others into top-level scope -->
+  <script src="/chartjs/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script src="/chartjs/chartjs-plugin-annotation.min.js"></script>
   <script type="module" src="provider.js"></script>
  </head>
@@ -19,7 +20,7 @@
     </form>
 
     <h2>Consumption report</h2>
-     <div id="latest-update"></div>
+     <div style="height: 60vh; width: 80vw;"><canvas id="consumptionChart"></canvas></div>
 
     <h2>Set Power Rates</h2>
      <div style="height: 60vh; width: 80vw;"><canvas id="powerRateChart"></canvas></div>

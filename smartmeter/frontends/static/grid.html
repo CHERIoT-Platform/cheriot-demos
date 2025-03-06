@@ -3,6 +3,9 @@
   <meta charset="utf-8" />
   <title>Grid View</title>
   <script src="/mqttjs/mqtt.min.js"></script> <!-- Brings "mqtt" into top-level scope -->
+  <script src="/chartjs/chart.umd.js"></script> <!-- Brings "Chart" and others into top-level scope -->
+  <script src="/chartjs/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="/chartjs/chartjs-plugin-annotation.min.js"></script>
   <script type="module" src="grid.js"></script>
  </head>
  <body>
@@ -17,7 +20,7 @@
     </form>
 
     <h2>Consumption report</h2>
-     <div id="latest-update"></div>
+     <div style="height: 60vh; width: 80vw;"><canvas id="consumptionChart"></canvas></div>
 
     <h2>Send Grid Alert</h2>
      <form id="gridAlertForm">
