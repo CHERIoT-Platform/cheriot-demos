@@ -71,12 +71,35 @@ int sensor_entry()
 		int     ret = gettimeofday(&tv, nullptr);
 		if (ret == 0)
 		{
-			// TODO: update array with meaningful numbers
 			struct sensor_data_fine_payload nextFinePayload = {0};
 			nextFinePayload.timestamp                       = tv.tv_sec;
 			nextFinePayload.samples[0]                      = sample;
+			memcpy(&nextFinePayload.samples[1],
+			       &sensorDataFine->payload.samples[0],
+			       sizeof(nextFinePayload.samples) -
+			         sizeof(nextFinePayload.samples[0]));
 
 			sensorDataFine->write(nextFinePayload);
+
+			if (i == 5)
+			{
+				struct sensor_data_coarse_payload nextCoarsePayload = {0};
+				nextCoarsePayload.timestamp                         = tv.tv_sec;
+
+				for (int j = 0; j < 5; j++)
+				{
+					nextCoarsePayload.samples[0] += nextFinePayload.samples[i];
+				}
+
+				memcpy(&nextCoarsePayload.samples[1],
+				       &sensorDataCoarse->payload.samples[0],
+				       sizeof(nextCoarsePayload.samples) -
+				         sizeof(nextCoarsePayload.samples[0]));
+
+				sensorDataCoarse->write(nextCoarsePayload);
+
+				i = 0;
+			}
 		}
 
 		Debug::log("Tick {}...", tv.tv_sec);
