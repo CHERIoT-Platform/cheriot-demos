@@ -48,7 +48,7 @@ const mqttClient = MQTT.connect(
   , clean: true
   , connectTimeout: 5000
   , reconnectPeriod: 1000
-  , ca: fs.readFileSync(democonfig.MQTT_BROKER_CERT)
+  , ca: fs.readFileSync(path.resolve("./static", democonfig.MQTT_BROKER_CERT))
   , rejectUnauthorized: democonfig.SECURE_CERT // permits self-signed certs if so configured
   });
 
