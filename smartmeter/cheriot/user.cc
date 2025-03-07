@@ -37,13 +37,14 @@ int user_data_entry()
 	static constexpr size_t nEvents = 6;
 
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
-	auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
-	  sensor_data, sensor_data, true, false, false, false);
+	auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
+	  sensor_data_fine, sensor_data_fine, true, false, false, false);
 #else
-	auto *sensorData = &theData.sensor_data;
+	auto *sensorDataFine = &theData.sensor_data_fine;
 #endif
 
-	Debug::log("sensor structure is {}", reinterpret_cast<void *>(sensorData));
+	Debug::log("sensor structure is {}",
+	           reinterpret_cast<void *>(sensorDataFine));
 
 	auto gridOutage = SHARED_OBJECT_WITH_PERMISSIONS(
 	  grid_planned_outage, grid_planned_outage, true, false, false, false);
@@ -55,7 +56,7 @@ int user_data_entry()
 	  provider_variance, provider_variance, true, false, false, false);
 
 	MultiWaiter              mw;
-	struct EventWaiterSource events[nEvents] = {{&sensorData->version, 0},
+	struct EventWaiterSource events[nEvents] = {{&sensorDataFine->version, 0},
 	                                            {&gridOutage->version, 0},
 	                                            {&gridRequest->version, 0},
 	                                            {&providerSchedule->version, 0},
@@ -88,8 +89,8 @@ int user_data_entry()
 		// TODO: limited timeouts
 		// TODO: collect which ones were updated to pass to JS
 		Timeout t{UnlimitedTimeout};
-		if (sensorData->read(&t, events[0].value, localSnapshots.sensor_data) ==
-		    0)
+		if (sensorDataFine->read(
+		      &t, events[0].value, localSnapshots.sensor_data) == 0)
 		{
 			/* Recompute our copy according to our timebase zero and rate */
 			uint32_t &sts = localSnapshots.sensor_data.timestamp;

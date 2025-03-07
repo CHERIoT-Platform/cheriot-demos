@@ -237,13 +237,18 @@ int provider_entry()
 
 		{
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
-			auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
-			  sensor_data, sensor_data, true, false, false, false);
+			auto sensorDataCoarse =
+			  SHARED_OBJECT_WITH_PERMISSIONS(sensor_data_coarse,
+			                                 sensor_data_coarse,
+			                                 true,
+			                                 false,
+			                                 false,
+			                                 false);
 #else
-			auto *sensorData = &theData.sensor_data;
+			auto *sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
 
-			sensor_data localSensorData = {0};
+			sensor_data_coarse localSensorData = {0};
 
 			Timeout loopTimeout{MS_TO_TICKS(5000)};
 			while (true)
@@ -264,9 +269,9 @@ int provider_entry()
 					 */
 
 					Timeout readTimeout{MS_TO_TICKS(1000)};
-					ret = sensorData->read(&readTimeout,
-					                       localSensorData.version,
-					                       localSensorData.payload);
+					ret = sensorDataCoarse->read(&readTimeout,
+					                             localSensorData.version,
+					                             localSensorData.payload);
 					if (ret == 0)
 					{
 						Debug::log("Awake and publishing {}",

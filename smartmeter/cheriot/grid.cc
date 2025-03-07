@@ -222,13 +222,13 @@ int grid_entry()
 
 		{
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
-			auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
-			  sensor_data, sensor_data, true, false, false, false);
+			auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
+			  sensor_data_fine, sensor_data_fine, true, false, false, false);
 #else
-			auto *sensorData = &theData.sensor_data;
+			auto *sensorDataFine = &theData.sensor_data_fine;
 #endif
 
-			sensor_data localSensorData = {0};
+			sensor_data_fine localSensorData = {0};
 
 			Timeout loopTimeout{MS_TO_TICKS(5000)};
 			while (true)
@@ -249,9 +249,9 @@ int grid_entry()
 					 */
 
 					Timeout readTimeout{MS_TO_TICKS(1000)};
-					ret = sensorData->read(&readTimeout,
-					                       localSensorData.version,
-					                       localSensorData.payload);
+					ret = sensorDataFine->read(&readTimeout,
+					                           localSensorData.version,
+					                           localSensorData.payload);
 					if (ret == 0)
 					{
 						Debug::log("Awake and publishing {}",
