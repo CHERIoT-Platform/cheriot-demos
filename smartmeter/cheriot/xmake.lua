@@ -103,7 +103,6 @@ compartment("user")
   end)
 
 compartment("monolith")
-  set_default("false")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("housekeeping.cc")
@@ -221,8 +220,8 @@ mkfirmware("smartmeter",
   end,
   mkthreads(nil --[[ many compartments --]]))
 
--- mkfirmware("smartmeter-monolith",
---   function()
---     add_deps("monolith")
---   end,
---   mkthreads("monolith"))
+mkfirmware("smartmeter-monolith",
+  function()
+    add_deps("monolith")
+  end,
+  mkthreads("monolith"))
