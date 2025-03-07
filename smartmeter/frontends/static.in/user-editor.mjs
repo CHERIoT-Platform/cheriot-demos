@@ -7,7 +7,71 @@ import * as democonfig from "./democonfig.mjs";
 
 var lastSubmittedEditorState;
 
-function panelCtor(view)
+const examples =
+  [ ["Initial policy", "user-policy-initial.txt" ]
+  ];
+
+function topPanelCtor(view)
+{
+  const dom = document.createElement("div");
+
+  const exampleSelector = document.createElement("select");
+  exampleSelector.required = false;
+  exampleSelector.selectedIndex = -1;
+
+  {
+    const opt = document.createElement("option");
+    opt.value = -1;
+    opt.text = "Load an example script";
+    opt.hidden = true;
+    opt.disabled = true;
+    opt.selected = true;
+    exampleSelector.appendChild(opt);
+  }
+
+  for (var i = 0; i < examples.length; i++)
+  {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.text = examples[i][0];
+    exampleSelector.appendChild(opt);
+  }
+
+  exampleSelector.addEventListener("change", async (event) =>
+    {
+      const text = await fetch(examples[event.target.selectedOptions[0].value][1]);
+      exampleSelector.selectedIndex = 0;
+      view.dispatch(
+        { changes:
+          { insert: await text.text()
+          , from: 0
+          , to: view.state.doc.length
+          }
+        });
+    }
+  );
+
+  dom.append(exampleSelector);
+
+  return { top: true
+         , dom
+         , update: (update) =>
+           {
+             if (update.docChanged)
+             {
+               exampleSelector.selectedIndex = 0;
+             }
+           }
+
+         };
+}
+
+function topPanelExt()
+{
+  return showPanel.of(topPanelCtor);
+}
+
+function bottomPanelCtor(view)
 {
   const dom = document.createElement("div");
 
@@ -43,9 +107,9 @@ function panelCtor(view)
          };
 }
 
-function panelExt()
+function bottomPanelExt()
 {
-  return showPanel.of(panelCtor);
+  return showPanel.of(bottomPanelCtor);
 }
 
 const initialTextResponse = await fetch("user-policy-initial.txt");
@@ -64,7 +128,8 @@ let editor = new EditorView({
               , history()
               , javascript()
               , keymap.of([indentWithTab])
-              , panelExt()
+              , topPanelExt()
+              , bottomPanelExt()
               ],
   parent: theForm,
   doc: initialText,
