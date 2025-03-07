@@ -48,10 +48,14 @@ int sensor_entry()
 	Debug::log("initialization barrier down");
 
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
-	auto sensorData = SHARED_OBJECT_WITH_PERMISSIONS(
-	  sensor_data, sensor_data, true, true, false, false);
+	auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
+	  sensor_data_fine, sensor_data_fine, true, true, false, false);
+
+	auto sensorDataCoarse = SHARED_OBJECT_WITH_PERMISSIONS(
+	  sensor_data_coarse, sensor_data_coarse, true, true, false, false);
 #else
-	auto *sensorData = &theData.sensor_data;
+	auto *sensorDataFine   = &theData.sensor_data_fine;
+	auto *sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
 	while (1)
 	{
@@ -68,11 +72,11 @@ int sensor_entry()
 		if (ret == 0)
 		{
 			// TODO: update array with meaningful numbers
-			struct sensor_data_payload nextPayload = {0};
-			nextPayload.timestamp                  = tv.tv_sec;
-			nextPayload.samples[0] = sample;
-			
-			sensorData->write(nextPayload);
+			struct sensor_data_fine_payload nextFinePayload = {0};
+			nextFinePayload.timestamp                       = tv.tv_sec;
+			nextFinePayload.samples[0]                      = sample;
+
+			sensorDataFine->write(nextFinePayload);
 		}
 
 		Debug::log("Tick {}...", tv.tv_sec);

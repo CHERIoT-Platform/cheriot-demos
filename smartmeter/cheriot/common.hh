@@ -135,14 +135,24 @@ struct FutexVersioned
 	}
 };
 
-struct sensor_data_payload
+struct sensor_data_fine_payload
 {
 	uint32_t timestamp;  // of samples[0], each next a minute back in the past
 	int32_t  samples[8]; // The past few minutes of sensor data
 };
 
-using sensor_data = FutexVersioned<sensor_data_payload>;
-static_assert(sizeof(sensor_data) == 40,
+using sensor_data_fine = FutexVersioned<sensor_data_fine_payload>;
+static_assert(sizeof(sensor_data_fine) == 40,
+              "sensor_data object bad size; update xmake.lua");
+
+struct sensor_data_coarse_payload
+{
+	uint32_t timestamp; // of samples[0], each next five minutes back
+	int32_t  samples[6];
+};
+
+using sensor_data_coarse = FutexVersioned<sensor_data_coarse_payload>;
+static_assert(sizeof(sensor_data_coarse) == 32,
               "sensor_data object bad size; update xmake.lua");
 
 /**
@@ -220,7 +230,7 @@ static_assert(sizeof(provider_variance) == 20,
  */
 struct userjs_snapshot
 {
-	struct sensor_data_payload sensor_data;
+	struct sensor_data_fine_payload sensor_data;
 
 	struct grid_planned_outage_payload grid_outage;
 	struct grid_request_payload        grid_request;
@@ -240,7 +250,8 @@ static_assert(sizeof(struct userjs_snapshot) == 168,
 #ifdef MONOLITH_BUILD_WITHOUT_SECURITY
 extern struct mergedData
 {
-	sensor_data     sensor_data;
-	userjs_snapshot userjs_snapshot;
+	sensor_data_fine   sensor_data_fine;
+	sensor_data_coarse sensor_data_coarse;
+	userjs_snapshot    userjs_snapshot;
 } theData;
 #endif

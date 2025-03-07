@@ -55,7 +55,10 @@ compartment("sensor")
   add_files("sensor.cc")
 
   on_load(function(target)
-    target:values_set("shared_objects", { sensor_data = 40 }, {expand = false})
+    target:values_set("shared_objects",
+       { sensor_data_coarse = 32
+       , sensor_data_fine = 40
+       }, {expand = false})
   end)
 
 compartment("grid")
