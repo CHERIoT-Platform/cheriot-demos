@@ -14,7 +14,6 @@
 #include <futex.h>
 #include <sntp.h>
 #include <thread.h>
-#include <fail-simulator-on-error.h>
 
 using Debug = ConditionalDebug<true, "sensor">;
 
