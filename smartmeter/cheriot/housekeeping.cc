@@ -20,16 +20,16 @@
 #endif
 #include <futex.h>
 #include <mqtt.h>
+#include <platform-pinmux.hh>
 #include <sntp.h>
 #include <thread.h>
 #include <tick_macros.h>
-#include <platform-pinmux.hh>
 
 using Debug = ConditionalDebug<true, "housekeeping">;
 
 std::atomic<uint32_t> initialized;
 
-char                  mqttUnique[8];
+char mqttUnique[8];
 
 constexpr bool random_id = std::string_view(MQTT_UNIQUE_ID) == "random";
 // MQTT_UNIQUE_ID must either be "random" or axactly 8 A-Za-z0-9 characters
@@ -113,17 +113,23 @@ int housekeeping_entry()
 
 	Debug::log("Configuring pinmux");
 	auto pinSinks = MMIO_CAPABILITY(SonataPinmux::PinSinks, pinmux_pins_sinks);
-	pinSinks->get(SonataPinmux::PinSink::pmod0_2).select(4); // uart1 tx -> pmod0_2
-	auto blockSinks = MMIO_CAPABILITY(SonataPinmux::BlockSinks, pinmux_block_sinks);
-	blockSinks->get(SonataPinmux::BlockSink::uart_1_rx).select(5); // pmod0_3 -> uart1 rx
+	pinSinks->get(SonataPinmux::PinSink::pmod0_2)
+	  .select(4); // uart1 tx -> pmod0_2
+	auto blockSinks =
+	  MMIO_CAPABILITY(SonataPinmux::BlockSinks, pinmux_block_sinks);
+	blockSinks->get(SonataPinmux::BlockSink::uart_1_rx)
+	  .select(5); // pmod0_3 -> uart1 rx
 
 	Debug::log("Initialising UART1 with baud 9600");
 	auto uart1 = MMIO_CAPABILITY(Uart, uart1);
 	uart1->init(9600);
 
-	if constexpr(random_id) {
+	if constexpr (random_id)
+	{
 		mqtt_generate_client_id(mqttUnique, sizeof(mqttUnique));
-	} else {
+	}
+	else
+	{
 		// copy the configured MQTT_UNIQUE_ID excluding the null byte
 		memcpy(mqttUnique, MQTT_UNIQUE_ID, sizeof(mqttUnique));
 	}

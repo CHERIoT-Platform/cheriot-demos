@@ -28,10 +28,12 @@ struct mergedData theData;
  * Read from uart in recieve_buffer until \n is recieved or buffer is full
  * then the return number of characters recieved (excluding the \n).
  */
-std::string read_line() {
+std::string read_line()
+{
 	std::string ret;
-	auto uart = MMIO_CAPABILITY(Uart, uart1);
-	while(true) {
+	auto        uart = MMIO_CAPABILITY(Uart, uart1);
+	while (true)
+	{
 		char c = uart->blocking_read();
 		if (c == '\n')
 			break;
@@ -57,13 +59,16 @@ int sensor_entry()
 	auto *sensorDataFine   = &theData.sensor_data_fine;
 	auto *sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
+
 	while (1)
 	{
-		auto line = read_line();
-		int sample = 0;
+		auto line   = read_line();
+		int  sample = 0;
 		Debug::log("Got line {}", line);
-		if (line.starts_with("powerSample")) {
-			sample = strtol(line.substr(sizeof("powerSample")).c_str(), nullptr, 0);
+		if (line.starts_with("powerSample"))
+		{
+			sample =
+			  strtol(line.substr(sizeof("powerSample")).c_str(), nullptr, 0);
 			Debug::log("Sample {}", sample);
 		}
 
