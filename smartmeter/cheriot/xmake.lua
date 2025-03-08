@@ -22,6 +22,10 @@ option("broker-anchor")
 option("unique-id")
   set_default("random")
 
+option("fake-sensor")
+  set_default(false)
+  add_defines("SMARTMETER_FAKE_UARTLESS_SENSOR")
+
 rule("smartmeter.mqtt")
   on_load(function (target)
     -- Note: port 8883 to be encrypted and tolerating unautenticated connections
@@ -54,6 +58,7 @@ compartment("sensor")
 
   add_files("sensor.cc")
 
+  add_options("fake-sensor")
   on_load(function(target)
     target:values_set("shared_objects",
        { sensor_data_coarse = 32
@@ -117,6 +122,7 @@ compartment("monolith")
   add_files("userJS.cc")
   add_files("user.cc")
 
+  add_options("fake-sensor")
   add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt", "housekeeping.unique-id")
 
   on_load(function(target)
