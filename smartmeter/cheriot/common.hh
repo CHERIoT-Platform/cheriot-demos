@@ -222,6 +222,18 @@ using provider_variance = FutexVersioned<provider_variance_payload>;
 static_assert(sizeof(provider_variance) == 20,
               "provider_variance object bad size; update xmake.lua");
 
+/**
+ * User signaled crash reporting
+ */
+struct user_crash_count_payload
+{
+	uint32_t crashes_since_boot;
+};
+
+using user_crash_count = FutexVersioned<user_crash_count_payload>;
+static_assert(sizeof(user_crash_count) == 8,
+              "user_crash_count object bad size; update xmake.lua");
+
 /*
  * The most recent stable snapshot of all the data sources we're
  * monitoring.
