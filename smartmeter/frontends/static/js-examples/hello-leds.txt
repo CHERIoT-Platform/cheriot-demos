@@ -1,7 +1,7 @@
 // Import everything from the environment
-import * as host from "./ffi.js"
+import * as host from "./ffi.js";
 
-var run_once = false
+var run_once = false;
 var tick = 0;
 var direction = false;
 
@@ -16,9 +16,6 @@ function run()
 			host.led_set(i, false)
 		}
 	}
-
-	var sts = host.read_from_snapshot(host.DATA_SENSOR_TIMESTAMP, 0);
-	host.print("STS ", sts);
 
 	var led = tick % 8
 	if (led === 0)

@@ -8,7 +8,8 @@ import * as democonfig from "./democonfig.mjs";
 var lastSubmittedEditorState;
 
 const examples =
-  [ ["Initial policy", "user-policy-initial.txt" ]
+  [ ["Initial policy", "/static/js-examples/initial.txt" ]
+  , ["Hello LEDs", "/static/js-examples/hello-leds.txt" ]
   ];
 
 function topPanelCtor(view)
@@ -112,7 +113,7 @@ function bottomPanelExt()
   return showPanel.of(bottomPanelCtor);
 }
 
-const initialTextResponse = await fetch("user-policy-initial.txt");
+const initialTextResponse = await fetch("/static/js-examples/initial.txt");
 const initialText = await initialTextResponse.text();
 
 const theForm = document.getElementById("theForm");
