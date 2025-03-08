@@ -36,10 +36,15 @@ mqttClient.on("message", (t, m) =>
   {
     const mString = m.toString();
     console.log("Message", t.toString(), mString);
-    if (t.startsWith("cheriot-smartmeter/g/update"))
+    if (t.startsWith("cheriot-smartmeter/g/update/"))
     {
       const report = /^\s*(\d+)\s+(-?\d+)\s+.*$/.exec(mString);
       updateConsumptionData(report);
+    }
+    else if (t.startsWith("cheriot-smartmeter/g/crash/"))
+    {
+      const report = /^\s*(\d+)\s*$/.exec(mString);
+      updateCrashData(report[1]);
     }
     else if (t.startsWith("cheriot-smartmeter/u/timebase"))
     {
@@ -53,6 +58,22 @@ mqttClient.on("connect", () =>
   {
     console.log("Connected");
   });
+
+/////
+// Crash count
+/////
+
+const meterCrashForm = document.getElementById("meterCrashForm");
+const meterCrashCount = meterCrashForm.querySelector("#meterCrashes");
+
+function updateCrashData(count)
+{
+  meterCrashCount.innerText = count;
+  meterCrashForm.animate([ { backgroundColor: "red" }
+                         , { backgroundColor: "inherit" }
+                         ],
+                         { duration: 2000, iterations: 1 });
+}
 
 /////
 // Consumption chart
@@ -143,6 +164,9 @@ function onNewMeterID(newID)
       mqttClient.unsubscribe(`cheriot-smartmeter/g/update/${lastMeterId}`,
         (err) => { if(err) { console.log("Failed to unsubscribe from updates?", err); } }
       );
+      mqttClient.unsubscribe(`cheriot-smartmeter/g/crash/${lastMeterId}`,
+        (err) => { if(err) { console.log("Failed to unsubscribe from crashes?", err); } }
+      );
       mqttClient.unsubscribe(`cheriot-smartmeter/u/timebase/${lastMeterId}`,
         (err) => { if(err) { console.log("Failed to unsubscribe from timebase?", err); } }
       );
@@ -151,10 +175,16 @@ function onNewMeterID(newID)
     lastMeterId = newID;
     timebaseZero = null;
 
+    consumptionData.splice(0, Infinity);
+    consumptionChart.update();
+
     if (mqttClient)
     {
       mqttClient.subscribe(`cheriot-smartmeter/g/update/${lastMeterId}`,
         (err) => { if(err) { console.log("Failed to subscribe?", err); } }
+      );
+      mqttClient.subscribe(`cheriot-smartmeter/g/crash/${lastMeterId}`,
+        (err) => { if(err) { console.log("Failed to subscribe to crashes?", err); } }
       );
       mqttClient.subscribe(`cheriot-smartmeter/u/timebase/${lastMeterId}`,
         (err) => { if(err) { console.log("Failed to subscribe to timebase?", err); } }
