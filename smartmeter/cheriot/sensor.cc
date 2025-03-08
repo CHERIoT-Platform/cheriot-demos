@@ -17,6 +17,9 @@
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 #	include <fail-simulator-on-error.h>
 #endif
+#ifdef SMARTMETER_FAKE_UARTLESS_SENSOR
+#	include <ds/xoroshiro.h>
+#endif
 
 using Debug = ConditionalDebug<true, "sensor">;
 
@@ -60,10 +63,24 @@ int sensor_entry()
 	auto *sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
 
+#ifdef SMARTMETER_FAKE_UARTLESS_SENSOR
+	ds::xoroshiro::P32R16 rand       = {};
+	int                   sampleBase = 0;
+#endif
+
 	while (1)
 	{
-		auto line   = read_line();
-		int  sample = 0;
+		int sample = 0;
+
+#ifdef SMARTMETER_FAKE_UARTLESS_SENSOR
+		int sampleDelta = rand.next() % 16;
+		if (sampleDelta != 0)
+		{
+			sampleBase += sampleDelta - 8;
+		}
+		sample = sampleBase;
+#else
+		auto line = read_line();
 		Debug::log("Got line {}", line);
 		if (line.starts_with("powerSample"))
 		{
@@ -71,6 +88,7 @@ int sensor_entry()
 			  strtol(line.substr(sizeof("powerSample")).c_str(), nullptr, 0);
 			Debug::log("Sample {}", sample);
 		}
+#endif
 
 		timeval tv;
 		int     ret = gettimeofday(&tv, nullptr);
@@ -109,8 +127,11 @@ int sensor_entry()
 
 		Debug::log("Tick {}...", tv.tv_sec);
 
-		Timeout t{MS_TO_TICKS(500)};
+#ifdef SMARTMETER_FAKE_UARTLESS_SENSOR
+		Timeout t{MS_TO_TICKS(1000)};
 		thread_sleep(&t, ThreadSleepNoEarlyWake);
+#endif
+
 		i++;
 	}
 }
