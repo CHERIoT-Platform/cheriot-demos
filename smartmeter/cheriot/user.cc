@@ -55,6 +55,9 @@ int user_data_entry()
 	auto providerVariance = SHARED_OBJECT_WITH_PERMISSIONS(
 	  provider_variance, provider_variance, true, false, false, false);
 
+	auto userCrashCount = SHARED_OBJECT_WITH_PERMISSIONS(
+	  user_crash_count, user_crash_count, true, true, false, false);
+
 	MultiWaiter              mw;
 	struct EventWaiterSource events[nEvents] = {{&sensorDataFine->version, 0},
 	                                            {&gridOutage->version, 0},
@@ -116,6 +119,9 @@ int user_data_entry()
 		if (ret == -ECOMPARTMENTFAIL)
 		{
 			Debug::log("JavaScript compartment crashed during tick");
+			user_crash_count_payload newPayload{
+			  userCrashCount->payload.crashes_since_boot + 1};
+			userCrashCount->write(newPayload);
 		}
 	}
 

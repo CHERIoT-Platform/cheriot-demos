@@ -64,7 +64,10 @@ static std::array<char,
 constexpr std::string_view publishTopicPrefix{"cheriot-smartmeter/g/update/"};
 static std::array<char,
                   publishTopicPrefix.size() + housekeeping_mqtt_unique_size>
-  publishTopic;
+                           publishTopic;
+constexpr std::string_view crashTopicPrefix{"cheriot-smartmeter/g/crash/"};
+static std::array<char, crashTopicPrefix.size() + housekeeping_mqtt_unique_size>
+  crashTopic;
 
 static void __cheri_callback publishCallback(const char *topicName,
                                              size_t      topicNameLength,
@@ -161,9 +164,20 @@ int grid_entry()
 
 	const char *mqttName = housekeeping_mqtt_unique_get();
 	HOUSEKEEPING_MQTT_CONCAT(clientID, clientIDPrefix, mqttName);
+	HOUSEKEEPING_MQTT_CONCAT(crashTopic, crashTopicPrefix, mqttName);
 	HOUSEKEEPING_MQTT_CONCAT(outageTopic, outageTopicPrefix, mqttName);
 	HOUSEKEEPING_MQTT_CONCAT(publishTopic, publishTopicPrefix, mqttName);
 	HOUSEKEEPING_MQTT_CONCAT(requestTopic, requestTopicPrefix, mqttName);
+
+#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
+	auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
+	  sensor_data_fine, sensor_data_fine, true, false, false, false);
+#else
+	auto *sensorDataFine = &theData.sensor_data_fine;
+#endif
+
+	auto userCrashCount = SHARED_OBJECT_WITH_PERMISSIONS(
+	  user_crash_count, user_crash_count, true, false, false, false);
 
 	while (true)
 	{
@@ -221,14 +235,8 @@ int grid_entry()
 		}
 
 		{
-#ifndef MONOLITH_BUILD_WITHOUT_SECURITY
-			auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
-			  sensor_data_fine, sensor_data_fine, true, false, false, false);
-#else
-			auto *sensorDataFine = &theData.sensor_data_fine;
-#endif
-
 			sensor_data_fine localSensorData = {0};
+			user_crash_count localCrashData  = {0};
 
 			Timeout loopTimeout{MS_TO_TICKS(5000)};
 			while (true)
@@ -248,47 +256,96 @@ int grid_entry()
 					 * that harder than it should be.
 					 */
 
-					Timeout readTimeout{MS_TO_TICKS(1000)};
-					ret = sensorDataFine->read(&readTimeout,
-					                           localSensorData.version,
-					                           localSensorData.payload);
-					if (ret == 0)
+					// sensor data
 					{
-						Debug::log("Awake and publishing {}",
-						           localSensorData.version);
-
-						/*
-						 * 10 digits for 3 32-bit values, space separated, with
-						 * NUL terminator: the timestamp and two most recent
-						 * values.
-						 */
-						char    msg[(10 + 1) * 3];
-						ssize_t msglen =
-						  snprintf(msg,
-						           sizeof(msg),
-						           "%d %d %d",
-						           localSensorData.payload.timestamp,
-						           localSensorData.payload.samples[0],
-						           localSensorData.payload.samples[1]);
-
-						Timeout t{MS_TO_TICKS(5000)};
-						ret = mqtt_publish(&t,
-						                   handle,
-						                   1, // QoS 1 = delivered at least once
-						                   publishTopic.data(),
-						                   publishTopic.size(),
-						                   msg,
-						                   msglen);
-
-						if (ret < 0)
+						Timeout readTimeout{MS_TO_TICKS(1000)};
+						ret = sensorDataFine->read(&readTimeout,
+						                           localSensorData.version,
+						                           localSensorData.payload);
+						if (ret == 0)
 						{
-							Debug::log("Failed to publish, error {}.", ret);
-							goto retry;
+							Debug::log("Awake and publishing {}",
+							           localSensorData.version);
+
+							/*
+							 * 10 digits for 3 32-bit values, space separated,
+							 * with NUL terminator: the timestamp and two most
+							 * recent values.
+							 */
+							char    msg[(10 + 1) * 3];
+							ssize_t msglen =
+							  snprintf(msg,
+							           sizeof(msg),
+							           "%d %d %d",
+							           localSensorData.payload.timestamp,
+							           localSensorData.payload.samples[0],
+							           localSensorData.payload.samples[1]);
+
+							Timeout t{MS_TO_TICKS(5000)};
+							ret =
+							  mqtt_publish(&t,
+							               handle,
+							               1, // QoS 1 = delivered at least once
+							               publishTopic.data(),
+							               publishTopic.size(),
+							               msg,
+							               msglen);
+
+							if (ret < 0)
+							{
+								Debug::log("Failed to publish, error {}.", ret);
+								goto retry;
+							}
+						}
+						else
+						{
+							Debug::log("Awake but skipping publish: {}", ret);
 						}
 					}
-					else
+
+					// crash count
 					{
-						Debug::log("Awake but skipping publish: {}", ret);
+						Timeout readTimeout{MS_TO_TICKS(1000)};
+						ret = userCrashCount->read(&readTimeout,
+						                           localCrashData.version,
+						                           localCrashData.payload);
+						if (ret == 0)
+						{
+							Debug::log(
+							  "Awake and publishing crash notification {}",
+							  localCrashData.version);
+
+							/*
+							 * 10 digits for a 32-bit value and NUL terminator
+							 */
+							char    msg[10 + 1];
+							ssize_t msglen = snprintf(
+							  msg,
+							  sizeof(msg),
+							  "%d",
+							  localCrashData.payload.crashes_since_boot);
+
+							Timeout t{MS_TO_TICKS(5000)};
+							ret =
+							  mqtt_publish(&t,
+							               handle,
+							               1, // QoS 1 = delivered at least once
+							               crashTopic.data(),
+							               crashTopic.size(),
+							               msg,
+							               msglen);
+
+							if (ret < 0)
+							{
+								Debug::log("Failed to publish, error {}.", ret);
+								goto retry;
+							}
+						}
+						else if (ret != -ENOMSG)
+						{
+							Debug::log("Unexpected crash count read result: {}",
+							           ret);
+						}
 					}
 
 					loopTimeout = Timeout{MS_TO_TICKS(5000)};

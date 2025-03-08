@@ -101,7 +101,9 @@ compartment("user")
 
   on_load(function(target)
     target:values_set("shared_objects",
-      { userJS_snapshot = 168 },
+      { userJS_snapshot = 168
+      , user_crash_count = 8
+      },
       {expand = false})
   end)
 
@@ -124,6 +126,7 @@ compartment("monolith")
       , grid_request = 12
       , provider_schedule = 104
       , provider_variance = 20
+      , user_crash_count = 8
       },
       {expand = false})
   end)
