@@ -38,7 +38,7 @@ mqttClient.on("message", (t, m) =>
     console.log("Message", t.toString(), mString);
     if (t.startsWith("cheriot-smartmeter/g/update"))
     {
-      const report = /^\s*(\d+)\s+(\d+)\s+.*$/.exec(mString);
+      const report = /^\s*(\d+)\s+(-?\d+)\s+.*$/.exec(mString);
       updateConsumptionData(report);
     }
     else if (t.startsWith("cheriot-smartmeter/u/timebase"))
