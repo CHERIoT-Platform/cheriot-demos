@@ -519,30 +519,30 @@ namespace
 	/**
 	 * Write a string passed from JavaScript to UART1
 	 */
-	 template<>
-	 mvm_TeError exported_function<UartWrite>(mvm_VM            *vm,
-										  mvm_HostFunctionID funcID,
-										  mvm_Value         *result,
-										  mvm_Value         *args,
-										  uint8_t            argCount)
-	 {
-		 // Helper to write a C string to the UART.
-		 auto puts = [](const char *str) {
-			 while (char c = *(str++))
-			 {
-				 MMIO_CAPABILITY(Uart, uart1)->blocking_write(c);
-			 }
-		 };
-		 // Iterate over the arguments.
-		 for (unsigned i = 0; i < argCount; i++)
-		 {
-			 // Coerce the argument to a string and get it as a C string and
-			 // write it to the UART.
-			 puts(mvm_toStringUtf8(vm, args[i], nullptr));
-		 }
-		 // Unconditionally return success
-		 return MVM_E_SUCCESS;
-	 }
+	template<>
+	mvm_TeError exported_function<UartWrite>(mvm_VM            *vm,
+	                                         mvm_HostFunctionID funcID,
+	                                         mvm_Value         *result,
+	                                         mvm_Value         *args,
+	                                         uint8_t            argCount)
+	{
+		// Helper to write a C string to the UART.
+		auto puts = [](const char *str) {
+			while (char c = *(str++))
+			{
+				MMIO_CAPABILITY(Uart, uart1)->blocking_write(c);
+			}
+		};
+		// Iterate over the arguments.
+		for (unsigned i = 0; i < argCount; i++)
+		{
+			// Coerce the argument to a string and get it as a C string and
+			// write it to the UART.
+			puts(mvm_toStringUtf8(vm, args[i], nullptr));
+		}
+		// Unconditionally return success
+		return MVM_E_SUCCESS;
+	}
 
 	/**
 	 * Callback from microvium that resolves imports.
