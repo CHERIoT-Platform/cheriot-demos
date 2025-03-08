@@ -277,9 +277,19 @@ int provider_entry()
 						Debug::log("Awake and publishing {}",
 						           localSensorData.version);
 
-						char    msg[32];
-						ssize_t msglen = snprintf(
-						  msg, sizeof(msg), "Tick %d", localSensorData.version);
+						/*
+						 * 10 digits for 3 32-bit values, space separated,
+						 * with NUL terminator: the timestamp and two most
+						 * recent values.
+						 */
+						char    msg[(10 + 1) * 3];
+						ssize_t msglen =
+						  snprintf(msg,
+						           sizeof(msg),
+						           "%d %d %d",
+						           localSensorData.payload.timestamp,
+						           localSensorData.payload.samples[0],
+						           localSensorData.payload.samples[1]);
 
 						Timeout t{MS_TO_TICKS(5000)};
 						ret = mqtt_publish(&t,
