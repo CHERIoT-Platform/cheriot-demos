@@ -104,14 +104,14 @@ int sensor_entry()
 
 			sensorDataFine->write(nextFinePayload);
 
-			if (i == 5)
+			if (i == SENSOR_COARSENING)
 			{
 				struct sensor_data_coarse_payload nextCoarsePayload = {0};
 				nextCoarsePayload.timestamp                         = tv.tv_sec;
 
-				for (int j = 0; j < 5; j++)
+				for (int j = 0; j < SENSOR_COARSENING; j++)
 				{
-					nextCoarsePayload.samples[0] += nextFinePayload.samples[i];
+					nextCoarsePayload.samples[0] += nextFinePayload.samples[j];
 				}
 
 				memcpy(&nextCoarsePayload.samples[1],
