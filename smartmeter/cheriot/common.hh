@@ -272,4 +272,14 @@ extern struct mergedData
 	sensor_data_coarse sensor_data_coarse;
 	userjs_snapshot    userjs_snapshot;
 } theData;
+
+static_assert(
+  (offsetof(struct mergedData, userjs_snapshot.provider_schedule.rate) -
+   offsetof(struct mergedData, sensor_data_fine.payload.samples[0])) == 120,
+  "Offsets shifted; update attack demo SENSOR_OFFSET_COARSE");
+
+static_assert(
+  (offsetof(struct mergedData, userjs_snapshot.provider_schedule.rate) -
+   offsetof(struct mergedData, sensor_data_coarse.payload.samples[0])) == 80,
+  "Offsets shifted; update attack demo SENSOR_OFFSET_FINE.");
 #endif
