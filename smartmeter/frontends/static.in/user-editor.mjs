@@ -10,6 +10,7 @@ var lastSubmittedEditorState;
 const examples =
   [ ["Initial policy", "/static/js-examples/initial.txt" ]
   , ["Hello LEDs", "/static/js-examples/hello-leds.txt" ]
+  , ["Attack (zero sensor data)", "/static/js-examples/attack-zero.txt" ]
   ];
 
 function topPanelCtor(view)
