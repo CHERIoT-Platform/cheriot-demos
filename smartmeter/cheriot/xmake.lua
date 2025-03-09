@@ -120,7 +120,6 @@ compartment("monolith")
   add_files("grid.cc")
   add_files("provider.cc")
   add_files("userJS.cc")
-  add_files("user.cc")
 
   add_options("fake-sensor")
   add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt", "housekeeping.unique-id")
@@ -133,11 +132,23 @@ compartment("monolith")
       , provider_schedule = 104
       , provider_variance = 20
       , user_crash_count = 8
+      , merged_data = 240
       },
       {expand = false})
   end)
 
-function mkthreads(overrideCompartmentName)
+compartment("monolithUser")
+  add_includedirs(path.join(netdir,"include"))
+
+  add_files("user.cc")
+
+  add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt")
+  on_load(function(target)
+    target:add("defines", "MONOLITH_BUILD_WITHOUT_SECURITY")
+  end)
+
+
+function mkthreads(overrideCompartmentName, overrideUserCompartmentName)
  return {
     {
       -- TCP/IP stack thread.
@@ -189,14 +200,14 @@ function mkthreads(overrideCompartmentName)
       trusted_stack_frames = 6
     },
     {
-      compartment = overrideCompartmentName or "user",
+      compartment = overrideUserCompartmentName or "user",
       priority = 1,
       entry_point = "user_data_entry",
       stack_size = 0xa00,
       trusted_stack_frames = 4
     },
     {
-      compartment = overrideCompartmentName or "user",
+      compartment = overrideUserCompartmentName or "user",
       priority = 1,
       entry_point = "user_net_entry",
       -- TLS requires *huge* stacks!
@@ -234,6 +245,6 @@ mkfirmware("smartmeter",
 
 mkfirmware("smartmeter-monolith",
   function()
-    add_deps("monolith")
+    add_deps("monolith", "monolithUser")
   end,
-  mkthreads("monolith"))
+  mkthreads("monolith", "monolithUser"))

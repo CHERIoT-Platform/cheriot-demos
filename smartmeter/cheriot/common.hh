@@ -11,16 +11,18 @@
 
 #ifdef MONOLITH_BUILD_WITHOUT_SECURITY
 #	define SMARTMETER_COMPARTMENT(x) __cheri_compartment("monolith")
+#	define SMARTMETER_USER_COMPARTMENT __cheri_compartment("monolithUser")
 #else
 #	define SMARTMETER_COMPARTMENT(x) __cheri_compartment(x)
+#	define SMARTMETER_USER_COMPARTMENT __cheri_compartment("user")
 #endif
 
 int SMARTMETER_COMPARTMENT("grid") grid_entry();
 int SMARTMETER_COMPARTMENT("housekeeping") housekeeping_entry();
 int SMARTMETER_COMPARTMENT("provider") provider_entry();
 int SMARTMETER_COMPARTMENT("sensor") sensor_entry();
-int SMARTMETER_COMPARTMENT("user") user_data_entry();
-int SMARTMETER_COMPARTMENT("user") user_net_entry();
+int SMARTMETER_USER_COMPARTMENT user_data_entry();
+int SMARTMETER_USER_COMPARTMENT user_net_entry();
 
 /* @} */
 
@@ -266,20 +268,23 @@ static_assert(sizeof(struct userjs_snapshot) == 168,
  * In a monolithic build, just use globals, as we would in a non-CHERI system.
  */
 #ifdef MONOLITH_BUILD_WITHOUT_SECURITY
-extern struct mergedData
+struct merged_data
 {
 	sensor_data_fine   sensor_data_fine;
 	sensor_data_coarse sensor_data_coarse;
 	userjs_snapshot    userjs_snapshot;
-} theData;
+};
+
+static_assert(sizeof(struct merged_data) == 240,
+              "mergedData object bad size; update xmake.lua");
 
 static_assert(
-  (offsetof(struct mergedData, userjs_snapshot.provider_schedule.rate) -
-   offsetof(struct mergedData, sensor_data_fine.payload.samples[0])) == 120,
+  (offsetof(struct merged_data, userjs_snapshot.provider_schedule.rate) -
+   offsetof(struct merged_data, sensor_data_fine.payload.samples[0])) == 120,
   "Offsets shifted; update attack demo SENSOR_OFFSET_COARSE");
 
 static_assert(
-  (offsetof(struct mergedData, userjs_snapshot.provider_schedule.rate) -
-   offsetof(struct mergedData, sensor_data_coarse.payload.samples[0])) == 80,
+  (offsetof(struct merged_data, userjs_snapshot.provider_schedule.rate) -
+   offsetof(struct merged_data, sensor_data_coarse.payload.samples[0])) == 80,
   "Offsets shifted; update attack demo SENSOR_OFFSET_FINE.");
 #endif
