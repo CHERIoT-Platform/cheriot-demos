@@ -84,3 +84,47 @@ export function grid_request(time)
 
   return host.read_from_snapshot(host.DATA_GRID_REQUEST_SEVERITY, 0);
 }
+
+// XXX: This is a WIP as opposed to anything useful.
+//
+// It should: return null if there's no scheduled outage within the 48 hour
+// provider-specified window or an outage in progress, or a timestamp at which
+// to begin charging the battery, between now and the start of the outage.  If
+// that's now, we should be charging the battery; if it's in the future, we
+// should wait.
+export function grid_outage(schedule_day_change, now)
+{
+  // Is there a grid planned outage in the near future?
+  var grid_outage_duration = host.read_from_snapshot(host.DATA_GRID_OUTAGE_DURATION, 0);
+  if (grid_outage_duration !== 0)
+  {
+    var grid_outage_start = host.read_from_snapshot(host.DATA_GRID_OUTAGE_START, 0);
+    let grid_outage_end = grid_outage_start + grid_outage_end;
+
+    if (grid_outage_end < now)
+    {
+      // Past outage
+      return null;
+    }
+    else if (grid_outage_start < now)
+    {
+      // Ongoing outage; not much we can do about it now
+      return null;
+    }
+    else if (grid_outage_start > (schedule_day_change + 2*24*HOUR_SECONDS))
+    {
+      // Far future outage, beyond the schedule's end
+      return null;
+    }
+    else
+    {
+      /*
+       * Outage within planning horizon.  We want to ensure that we have
+       * power reserves when the time comes, so sweep through the schedule
+       * looking for a good time to charge.
+       *
+       * TODO
+       */
+    }
+  }
+}

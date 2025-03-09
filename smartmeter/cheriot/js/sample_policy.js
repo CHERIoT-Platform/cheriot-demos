@@ -13,38 +13,32 @@ function run()
 
   host.print("STS ", sts, " RATE ", rate, " REQ ", req);
 
-  if ((rate < 0) && (req === null || req >= 0))
+  if (req !== null)
   {
-    // Electricity is very cheap and the grid isn't asking us to not draw
-    // TODO: charge the battery, turn on expensive things, &c.
-    host.print("Do expensive stuff")
-  }
-
-  // Is there a grid planned outage in the near future?
-  var grid_outage_duration = host.read_from_snapshot(host.DATA_GRID_OUTAGE_DURATION, 0);
-  if (grid_outage_duration !== 0)
-  {
-    var grid_outage_start = host.read_from_snapshot(host.DATA_GRID_OUTAGE_START, 0);
-    let grid_outage_end = grid_outage_start + grid_outage_end;
-
-    if (grid_outage_end < sts)
+    if (req < 0)
     {
-      // Past outage
-    }
-    else if (grid_outage_start > (schedule_day_change + 2*24*sm.HOUR_SECONDS))
-    {
-      // Far future outage, beyond the schedule's end
+      // The grid is asking us to draw less; respond by discharging the battery
+      // Could also do things like turn off the heat pump
+      host.print("Grid request less consumption");
+      host.uart_write("battery -1");
     }
     else
     {
-      /*
-       * Outage within planning horizon.  We want to ensure that we have
-       * power reserves when the time comes, so sweep through the schedule
-       * looking for a good time to charge.
-       *
-       * TODO
-       */
+      // The grid is asking us to draw more; respond by charging the battery
+      // Could also do things like turn on the heat pump
+      host.print("Grid request more consumption");
+      host.uart_write("battery 1");
     }
+
+    // Grid requests take precedence over the rest of the policy
+    return;
+  }
+
+  if (rate < 0)
+  {
+    // Electricity is very cheap and the grid isn't asking us to not draw
+    host.print("Power is free");
+    host.uart_write("battery 1");
   }
 }
 
