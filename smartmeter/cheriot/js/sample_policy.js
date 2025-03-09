@@ -39,7 +39,11 @@ function run()
     // Electricity is very cheap and the grid isn't asking us to not draw
     host.print("Power is free");
     host.uart_write("battery 1");
+    return;
   }
+
+  // Default: neither charge nor discharge the battery.
+  host.uart_write("battery 0");
 }
 
 vmExport(1234, run);
