@@ -108,8 +108,13 @@ function updateConsumptionData(report)
   consumptionData.push({ x: now, y: parseInt(report[2]) })
 
   // Prune old data
-  consumptionData.splice(1, consumptionData.findIndex(
-    (dataElement) => dataElement.x >= now - 7200000) - 1);
+  consumptionData.sort((a,b) => a.x - b.x);
+  const firstKeep = consumptionData.findIndex(
+    (dataElement) => dataElement.x >= now - 7200000);
+  if (firstKeep > 0)
+  {
+    consumptionData.splice(0, firstKeep - 1);
+  }
 
   consumptionChart.update();
 }
