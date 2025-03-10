@@ -28,9 +28,7 @@ int32_t read_from_snapshot(int32_t type, int32_t index)
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, false, false, false);
 #else
-	auto *snapshots = &SHARED_OBJECT_WITH_PERMISSIONS(
-	                     merged_data, merged_data, true, true, false, false)
-	                     ->userjs_snapshot;
+	auto *snapshots = &theData.userjs_snapshot;
 #endif
 
 	switch (type)

@@ -245,10 +245,7 @@ int provider_entry()
 			                                 false,
 			                                 false);
 #else
-			auto sensorDataCoarse =
-			  &SHARED_OBJECT_WITH_PERMISSIONS(
-			     merged_data, merged_data, true, true, false, false)
-			     ->sensor_data_coarse;
+			auto sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
 
 			sensor_data_coarse localSensorData = {0};

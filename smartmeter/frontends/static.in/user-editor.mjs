@@ -12,6 +12,7 @@ const examples =
   , ["Hello LEDs", "/static/js-examples/hello-leds.txt" ]
   , ["Attack (zero sensor data)", "/static/js-examples/attack-zero.txt" ]
   , ["Crash", "/static/js-examples/crash.txt" ]
+  , ["Attack (pointer forging example)", "/static/js-examples/attack-cgp.txt" ]
   ];
 
 function topPanelCtor(view)

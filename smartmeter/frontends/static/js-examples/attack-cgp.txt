@@ -1,0 +1,24 @@
+// Import everything from the environment
+import * as host from "./ffi.js"
+import * as sm   from "./smartmeter.js"
+
+const SENSOR_OFFSET_FINE = -120;
+const SENSOR_OFFSET_COARSE = -80;
+
+function run()
+{
+  // The device exposes the provider's rate schedule as an array to our
+  // capability register machine.  Have it land in register 1.
+  // We can think of this as an information leak of the address rather than a
+  // pointer proper, perhaps.
+  host.read_from_snapshot(host.DATA_PROVIDER_SCHEDULE_RATE_ARRAY, 1);
+  const rate_array_address = host.get_address(1);
+
+  // So let's say we had a pointer forging gadget...
+  host.register_move(2, host.CGP);
+  host.set_address(2, rate_array_address);
+  host.print("Reading sensor data via CGP ",
+    host.load_int(2, SENSOR_OFFSET_FINE));
+}
+
+vmExport(1234, run);
