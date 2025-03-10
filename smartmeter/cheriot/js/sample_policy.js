@@ -20,14 +20,14 @@ function run()
       // The grid is asking us to draw less; respond by discharging the battery
       // Could also do things like turn off the heat pump
       host.print("Grid request less consumption");
-      host.uart_write("battery -1");
+      host.uart_write("battery -1\n");
     }
     else
     {
       // The grid is asking us to draw more; respond by charging the battery
       // Could also do things like turn on the heat pump
       host.print("Grid request more consumption");
-      host.uart_write("battery 1");
+      host.uart_write("battery 1\n");
     }
 
     // Grid requests take precedence over the rest of the policy
@@ -38,12 +38,12 @@ function run()
   {
     // Electricity is very cheap and the grid isn't asking us to not draw
     host.print("Power is free");
-    host.uart_write("battery 1");
+    host.uart_write("battery 1\n");
     return;
   }
 
   // Default: neither charge nor discharge the battery.
-  host.uart_write("battery 0");
+  host.uart_write("battery 0\n");
 }
 
 vmExport(1234, run);
