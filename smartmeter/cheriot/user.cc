@@ -40,9 +40,7 @@ int user_data_entry()
 	auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data_fine, sensor_data_fine, true, false, false, false);
 #else
-	auto sensorDataFine = &SHARED_OBJECT_WITH_PERMISSIONS(
-	                         merged_data, merged_data, true, true, false, false)
-	                         ->sensor_data_fine;
+	auto sensorDataFine = &monolith_merged_data_get()->sensor_data_fine;
 #endif
 
 	Debug::log("sensor structure is {}",
@@ -78,9 +76,7 @@ int user_data_entry()
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, true, false, false);
 #else
-	auto *snapshots = &SHARED_OBJECT_WITH_PERMISSIONS(
-	                     merged_data, merged_data, true, true, false, false)
-	                     ->userjs_snapshot;
+	auto *snapshots = &monolith_merged_data_get()->userjs_snapshot;
 #endif
 
 	Debug::log("snapshot structure is {}", reinterpret_cast<void *>(snapshots));

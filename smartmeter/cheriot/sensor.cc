@@ -21,6 +21,15 @@
 #	include <ds/xoroshiro.h>
 #endif
 
+#ifdef MONOLITH_BUILD_WITHOUT_SECURITY
+struct merged_data theData;
+
+struct merged_data *monolith_merged_data_get()
+{
+	return &theData;
+}
+#endif
+
 using Debug = ConditionalDebug<true, "sensor">;
 
 /**
@@ -55,13 +64,8 @@ int sensor_entry()
 	auto sensorDataCoarse = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data_coarse, sensor_data_coarse, true, true, false, false);
 #else
-	auto sensorDataFine = &SHARED_OBJECT_WITH_PERMISSIONS(
-	                         merged_data, merged_data, true, true, false, false)
-	                         ->sensor_data_fine;
-	auto sensorDataCoarse =
-	  &SHARED_OBJECT_WITH_PERMISSIONS(
-	     merged_data, merged_data, true, true, false, false)
-	     ->sensor_data_coarse;
+	auto sensorDataFine   = &theData.sensor_data_fine;
+	auto sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
 
 #ifdef SMARTMETER_FAKE_UARTLESS_SENSOR

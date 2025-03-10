@@ -132,7 +132,6 @@ compartment("monolith")
       , provider_schedule = 104
       , provider_variance = 20
       , user_crash_count = 8
-      , merged_data = 240
       },
       {expand = false})
   end)

@@ -275,8 +275,11 @@ struct merged_data
 	userjs_snapshot    userjs_snapshot;
 };
 
-static_assert(sizeof(struct merged_data) == 240,
-              "mergedData object bad size; update xmake.lua");
+// in monolith compartment; exposed via getter to monolithUser
+extern struct merged_data theData;
+
+struct merged_data *SMARTMETER_COMPARTMENT("monolith")
+  monolith_merged_data_get();
 
 static_assert(
   (offsetof(struct merged_data, userjs_snapshot.provider_schedule.rate) -

@@ -173,9 +173,7 @@ int grid_entry()
 	auto sensorDataFine = SHARED_OBJECT_WITH_PERMISSIONS(
 	  sensor_data_fine, sensor_data_fine, true, false, false, false);
 #else
-	auto sensorDataFine = &SHARED_OBJECT_WITH_PERMISSIONS(
-	                         merged_data, merged_data, true, true, false, false)
-	                         ->sensor_data_fine;
+	auto sensorDataFine = &theData.sensor_data_fine;
 #endif
 
 	auto userCrashCount = SHARED_OBJECT_WITH_PERMISSIONS(
