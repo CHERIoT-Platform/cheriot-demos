@@ -12,6 +12,7 @@
 
 #include <debug.hh>
 #include <futex.h>
+#include <interrupt.h>
 #include <sntp.h>
 #include <thread.h>
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
@@ -32,27 +33,81 @@ struct merged_data *monolith_merged_data_get()
 
 using Debug = ConditionalDebug<true, "sensor">;
 
+DECLARE_AND_DEFINE_INTERRUPT_CAPABILITY(uart1InterruptCap,
+                                        Uart1Interrupt,
+                                        true,
+                                        true);
+const uint32_t *uart1InterruptFutex;
+
 /**
- * Read from uart in recieve_buffer until \n is recieved or buffer is full
- * then the return number of characters recieved (excluding the \n).
+ * Read line from uart, discarding any over-long line.
  */
 std::string read_line()
 {
+	static constexpr size_t MaximumLineLength = 64;
+
 	std::string ret;
-	auto        uart = MMIO_CAPABILITY(Uart, uart1);
+	ret.reserve(MaximumLineLength);
+	Debug::Assert(ret.capacity() >= MaximumLineLength,
+	              "read_line alloc failed: {}",
+	              ret.capacity());
+
+	/*
+	 * If we've overrun the maximum length, then we're dropping bytes until we
+	 * find a newline, at which point we'll pick up again.
+	 */
+	bool discarding = false;
+
+	auto uart = MMIO_CAPABILITY(Uart, uart1);
+
 	while (true)
 	{
-		char c = uart->blocking_read();
-		if (c == '\n')
-			break;
-		ret.push_back(c);
+		Timeout t{MS_TO_TICKS(60000)};
+		auto    irqCount = *uart1InterruptFutex;
+
+		while ((uart->status & OpenTitanUart::StatusReceiveEmpty) == 0)
+		{
+			char c = uart->readData;
+			if (c == '\n')
+			{
+				if (!discarding)
+				{
+					return ret;
+				}
+				else
+				{
+					Debug::log("reset");
+					discarding = false;
+				}
+			}
+			else if (ret.size() == MaximumLineLength)
+			{
+				Debug::log("overlong");
+				discarding = true;
+				ret.clear();
+			}
+			else if (!discarding)
+			{
+				ret.push_back(c);
+			}
+		}
+
+		interrupt_complete(STATIC_SEALED_VALUE(uart1InterruptCap));
+
+		auto waitRes = futex_timed_wait(&t, uart1InterruptFutex, irqCount);
+		if (waitRes != 0)
+		{
+			Debug::log("Unexpected wait return {}", waitRes);
+		}
 	}
-	return ret;
 }
 
 int sensor_entry()
 {
 	int i = 0;
+
+	uart1InterruptFutex =
+	  interrupt_futex_get(STATIC_SEALED_VALUE(uart1InterruptCap));
 
 	housekeeping_initial_barrier();
 	Debug::log("initialization barrier down");

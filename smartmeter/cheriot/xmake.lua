@@ -177,7 +177,7 @@ function mkthreads(overrideCompartmentName, overrideUserCompartmentName)
     },
     {
       compartment = overrideCompartmentName or "sensor",
-      priority = 1,
+      priority = 2,
       entry_point = "sensor_entry",
       stack_size = 2048,
       trusted_stack_frames = 3
