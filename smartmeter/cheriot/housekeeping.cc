@@ -124,6 +124,9 @@ int housekeeping_entry()
 	auto uart1 = MMIO_CAPABILITY(Uart, uart1);
 	uart1->init(9600);
 
+	uart1->receive_watermark(OpenTitanUart::ReceiveWatermark::Level1);
+	uart1->interrupt_enable(OpenTitanUart::InterruptReceiveWatermark);
+
 	if constexpr (random_id)
 	{
 		mqtt_generate_client_id(mqttUnique, sizeof(mqttUnique));
