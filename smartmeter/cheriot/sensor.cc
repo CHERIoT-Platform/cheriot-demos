@@ -39,18 +39,15 @@ DECLARE_AND_DEFINE_INTERRUPT_CAPABILITY(uart1InterruptCap,
                                         true);
 const uint32_t *uart1InterruptFutex;
 
+#ifndef SMARTMETER_FAKE_UARTLESS_SENSOR
+static constexpr size_t MaximumLineLength = 64;
+
 /**
  * Read line from uart, discarding any over-long line.
  */
-std::string read_line()
+void read_line(std::string &ret)
 {
-	static constexpr size_t MaximumLineLength = 64;
-
-	std::string ret;
-	ret.reserve(MaximumLineLength);
-	Debug::Assert(ret.capacity() >= MaximumLineLength,
-	              "read_line alloc failed: {}",
-	              ret.capacity());
+	ret.clear();
 
 	/*
 	 * If we've overrun the maximum length, then we're dropping bytes until we
@@ -72,7 +69,7 @@ std::string read_line()
 			{
 				if (!discarding)
 				{
-					return ret;
+					return;
 				}
 				else
 				{
@@ -101,6 +98,7 @@ std::string read_line()
 		}
 	}
 }
+#endif
 
 int sensor_entry()
 {
@@ -126,6 +124,13 @@ int sensor_entry()
 #ifdef SMARTMETER_FAKE_UARTLESS_SENSOR
 	ds::xoroshiro::P32R16 rand       = {};
 	int                   sampleBase = 0;
+#else
+	std::string line;
+
+	line.reserve(MaximumLineLength);
+	Debug::Assert(line.capacity() >= MaximumLineLength,
+	              "read_line alloc failed: {}",
+	              line.capacity());
 #endif
 
 	while (1)
@@ -140,7 +145,7 @@ int sensor_entry()
 		}
 		sample = sampleBase;
 #else
-		auto line = read_line();
+		read_line(line);
 		Debug::log("Got line {}", line);
 		if (line.starts_with("powerSample"))
 		{
