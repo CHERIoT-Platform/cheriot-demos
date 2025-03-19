@@ -75,17 +75,24 @@ public class MainActivity extends AppCompatActivity implements android.view.View
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        android.util.Log.i("MQTT", "App started");
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    protected void onSaveInstanceState (Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putByteArray("key", key);
+        outState.putString("topic", MQTTName);
+    }
 
+    @Override
+    protected void onRestoreInstanceState (Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
+        key = savedInstanceState.getByteArray("key");
+        MQTTName = savedInstanceState.getString("topic");
+        initialiseMQTT();
+    }
+
+    private void initialiseMQTT()
+    {
         try {
             final String ClientIdCharacters =
                     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -110,6 +117,21 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         } catch (Exception e) {
             android.util.Log.w("MQTT", "Connection error" + e.getMessage());
         }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        android.util.Log.i("MQTT", "App started");
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        initialiseMQTT();
 
         android.widget.Button btnQRScan = findViewById(R.id.btnQRScan);
         btnQRScan.setOnClickListener(this);
