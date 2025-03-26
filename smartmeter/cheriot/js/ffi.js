@@ -156,6 +156,11 @@ export const read_from_snapshot = vmImport(18);
  */
 export const uart_write = vmImport(19)
 
+/**
+ * Crash the network stack
+ */
+export const network_fault_inject = vmImport(20);
+
 export const DATA_SENSOR_TIMESTAMP = 1;
 export const DATA_SENSOR_SAMPLE = 2;
 export const DATA_GRID_OUTAGE_START = 3;

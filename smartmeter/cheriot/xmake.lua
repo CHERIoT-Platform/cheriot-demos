@@ -95,7 +95,12 @@ compartment("provider")
   end)
 
 compartment("userJS")
+  add_includedirs(path.join(netdir,"include"))
+
   add_files("userJS.cc")
+
+  local injectFaults = get_config("network-inject-faults")
+  add_defines("CHERIOT_RTOS_OPTION_NETWORK_INJECT_FAULTS=" ..  tostring(injectFaults))
 
 compartment("user")
   add_includedirs(path.join(netdir,"include"))
@@ -123,6 +128,9 @@ compartment("monolith")
 
   add_options("fake-sensor")
   add_rules("cheriot.network-stack.ipv6", "smartmeter.mqtt", "housekeeping.unique-id")
+
+  local injectFaults = get_config("network-inject-faults")
+  add_defines("CHERIOT_RTOS_OPTION_NETWORK_INJECT_FAULTS=" ..  tostring(injectFaults))
 
   on_load(function(target)
     target:add("defines", "MONOLITH_BUILD_WITHOUT_SECURITY")

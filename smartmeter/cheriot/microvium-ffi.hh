@@ -9,6 +9,8 @@
 #include <thread.h>
 #include <tuple>
 
+#include <NetAPI.h>
+
 /**
  * Code related to the JavaScript interpreter.
  */
@@ -41,7 +43,8 @@ namespace
 		ReadSwitches,
 		LEDSet,
 		ReadFromSnapshot,
-		UartWrite
+		UartWrite,
+		NetworkFaultInject
 	};
 
 	/// Constant for the run function exposed to C++->JavaScript FFI
@@ -543,6 +546,22 @@ namespace
 		// Unconditionally return success
 		return MVM_E_SUCCESS;
 	}
+
+	/**
+	 * Crash the network stack
+	 */
+	bool export_network_fault_inject()
+	{
+#if CHERIOT_RTOS_OPTION_NETWORK_INJECT_FAULTS
+		network_inject_fault();
+		return true;
+#endif
+		return false;
+	}
+
+	template<>
+	constexpr static auto ExportedFn<NetworkFaultInject> =
+	  export_network_fault_inject;
 
 	/**
 	 * Callback from microvium that resolves imports.
