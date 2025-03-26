@@ -72,6 +72,8 @@ int user_data_entry()
 		Debug::Invariant(ret == 0, "Could not create multiwaiter object");
 	}
 
+	uint32_t event_futex_cache[nEvents] = {0};
+
 #ifndef MONOLITH_BUILD_WITHOUT_SECURITY
 	auto snapshots = SHARED_OBJECT_WITH_PERMISSIONS(
 	  userjs_snapshot, userJS_snapshot, true, true, false, false);
@@ -83,6 +85,11 @@ int user_data_entry()
 
 	while (true)
 	{
+		for (size_t i = 0; i < nEvents; i++)
+		{
+			events[i].value = event_futex_cache[i];
+		}
+
 		int ret = blocking_forever<multiwaiter_wait>(mw, events, nEvents);
 		Debug::Invariant(ret == 0, "Failed to wait for events: {}", ret);
 
@@ -91,9 +98,10 @@ int user_data_entry()
 		// Update snapshots
 		// TODO: limited timeouts
 		// TODO: collect which ones were updated to pass to JS
+
 		Timeout t{UnlimitedTimeout};
 		if (sensorDataFine->read(
-		      &t, events[0].value, localSnapshots.sensor_data) == 0)
+		      &t, event_futex_cache[0], localSnapshots.sensor_data) == 0)
 		{
 			/* Recompute our copy according to our timebase zero and rate */
 			uint32_t &sts = localSnapshots.sensor_data.timestamp;
@@ -104,14 +112,15 @@ int user_data_entry()
 				sts = timebase_zero + elapsed;
 			}
 		}
-		gridOutage->read(&t, events[1].value, localSnapshots.grid_outage);
-		gridRequest->read(&t, events[2].value, localSnapshots.grid_request);
+		gridOutage->read(&t, event_futex_cache[1], localSnapshots.grid_outage);
+		gridRequest->read(
+		  &t, event_futex_cache[2], localSnapshots.grid_request);
 		providerSchedule->read(
-		  &t, events[3].value, localSnapshots.provider_schedule);
+		  &t, event_futex_cache[3], localSnapshots.provider_schedule);
 		providerVariance->read(
-		  &t, events[4].value, localSnapshots.provider_variance);
+		  &t, event_futex_cache[4], localSnapshots.provider_variance);
 
-		events[5].value = net_wake_count;
+		event_futex_cache[5] = net_wake_count;
 
 		*snapshots = localSnapshots;
 
