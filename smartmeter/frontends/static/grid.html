@@ -1,0 +1,47 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <title>Grid View</title>
+  <script src="/mqttjs/mqtt.min.js"></script> <!-- Brings "mqtt" into top-level scope -->
+  <script src="/chartjs/chart.umd.js"></script> <!-- Brings "Chart" and others into top-level scope -->
+  <script src="/chartjs/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="/chartjs/chartjs-plugin-annotation.min.js"></script>
+  <script type="module" src="grid.js"></script>
+ </head>
+ <body>
+   <h1>Grid Operator View</h1>
+
+    <form id="meterIDForm">
+      <label>Meter Identity String:</label>
+      <input type="text" id="meterIdentity"
+             required autocomplete="off"
+             pattern="[A-Za-z0-9]{8}" placeholder="ABCDEFGH" />
+      <button id="meterIDSubmit" type="submit" disabled>Set</button>
+    </form>
+
+    <form style="width:fit-content;" id="meterCrashForm">
+      <label>Crashes since most recent boot:</label>
+      <output type="text" id="meterCrashes">0</output>
+    </form>
+
+    <h2>Consumption report</h2>
+     <div style="height: 60vh; width: 80vw;"><canvas id="consumptionChart"></canvas></div>
+
+    <h2>Send Grid Alert</h2>
+     <form id="gridAlertForm">
+       For the next
+         <input id="gridAlertDuration" type="number" min=0 max=10 step=1 value=1 />
+       minutes, tell the house to
+         <select id="gridAlertSelect">
+           <option value="-1024">Reduce consumption (too little power on grid)</option>
+           <option value="-512">Modestly reduce reduction</option>
+           <option value="0" selected>Carry on (grid OK)</option>
+           <option value="512">Modestly increase consumption</option>
+           <option value="1024">Increase consumption (excess power on grid)</option>
+         </select>
+       .
+       <button id="gridAlertSubmit" type="submit" disabled>Publish!</button>
+     </form>
+
+ </body>
+</html>
