@@ -147,11 +147,7 @@ using sensor_data_fine = FutexVersioned<sensor_data_fine_payload>;
 static_assert(sizeof(sensor_data_fine) == 40,
               "sensor_data object bad size; update xmake.lua");
 
-static constexpr size_t SENSOR_COARSENING = 8;
-static_assert(SENSOR_COARSENING <=
-                sizeof(((sensor_data_fine_payload){}).samples) /
-                  sizeof(((sensor_data_fine_payload){}).samples[0]),
-              "Can't coarsen past fine log's end");
+static constexpr size_t SENSOR_COARSENING = 300;
 
 struct sensor_data_coarse_payload
 {

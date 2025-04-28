@@ -102,8 +102,6 @@ void read_line(std::string &ret)
 
 int sensor_entry()
 {
-	int i = 0;
-
 	uart1InterruptFutex =
 	  interrupt_futex_get(STATIC_SEALED_VALUE(uart1InterruptCap));
 
@@ -120,6 +118,11 @@ int sensor_entry()
 	auto sensorDataFine   = &theData.sensor_data_fine;
 	auto sensorDataCoarse = &theData.sensor_data_coarse;
 #endif
+
+	struct sensor_data_coarse_payload nextCoarsePayload = {0};
+	bool sendNextCoarsePayload = false;
+	int coarseSampleCount = 0;
+	int32_t coarseSampleAccumulator = 0;
 
 #ifdef SMARTMETER_FAKE_UARTLESS_SENSOR
 	ds::xoroshiro::P32R16 rand       = {};
@@ -155,6 +158,8 @@ int sensor_entry()
 		}
 #endif
 
+		coarseSampleAccumulator += sample;
+
 		timeval tv;
 		int     ret = gettimeofday(&tv, nullptr);
 		if (ret == 0)
@@ -169,25 +174,26 @@ int sensor_entry()
 
 			sensorDataFine->write(nextFinePayload);
 
-			if (i == SENSOR_COARSENING)
+			if (sendNextCoarsePayload)
 			{
-				struct sensor_data_coarse_payload nextCoarsePayload = {0};
-				nextCoarsePayload.timestamp                         = tv.tv_sec;
-
-				for (int j = 0; j < SENSOR_COARSENING; j++)
-				{
-					nextCoarsePayload.samples[0] += nextFinePayload.samples[j];
-				}
-
-				memcpy(&nextCoarsePayload.samples[1],
-				       &sensorDataCoarse->payload.samples[0],
-				       sizeof(nextCoarsePayload.samples) -
-				         sizeof(nextCoarsePayload.samples[0]));
-
+				nextCoarsePayload.timestamp = tv.tv_sec;
 				sensorDataCoarse->write(nextCoarsePayload);
-
-				i = 0;
+				sendNextCoarsePayload = false;
 			}
+		}
+
+		if (coarseSampleCount++ == SENSOR_COARSENING)
+		{
+			memmove(&nextCoarsePayload.samples[1],
+			       &nextCoarsePayload.samples[0],
+			       sizeof(nextCoarsePayload.samples) -
+			         sizeof(nextCoarsePayload.samples[0]));
+
+			nextCoarsePayload.samples[0] = coarseSampleAccumulator;
+			coarseSampleAccumulator = 0;
+
+			coarseSampleCount = 0;
+			sendNextCoarsePayload = true;
 		}
 
 		Debug::log("Tick {}...", tv.tv_sec);
@@ -196,7 +202,5 @@ int sensor_entry()
 		Timeout t{MS_TO_TICKS(1000)};
 		thread_sleep(&t, ThreadSleepNoEarlyWake);
 #endif
-
-		i++;
 	}
 }
