@@ -180,7 +180,7 @@ function mkthreads(overrideCompartmentName, overrideUserCompartmentName)
       compartment = overrideCompartmentName or "housekeeping",
       priority = 1,
       entry_point = "housekeeping_entry",
-      stack_size = 2048,
+      stack_size = 3072,
       trusted_stack_frames = 6
     },
     {
