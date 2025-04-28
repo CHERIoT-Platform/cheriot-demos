@@ -1,0 +1,9 @@
+import * as host from "./ffi.js"
+
+function run()
+{
+  // Attempt to write to null.  This crashes.
+  host.store(-1, 0, 0);
+}
+
+vmExport(1234, run);

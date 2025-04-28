@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         build-type: [ debug, release ]
-        demo: [compartmentalisation, configuration_broker_ibex, configuration_broker_sonata, HughV1, HughV2]
+        demo: [compartmentalisation, configuration_broker_ibex, configuration_broker_sonata, HughV1, HughV2, smart_meter]
         include:
           - xmake-run: false
           - build-type: debug
@@ -39,6 +39,9 @@ jobs:
           - demo: configuration_broker_ibex
             build-dir: configuration_broker/ibex-safe-simulator
             xmake-run: true
+          - demo: smart_meter
+            build-dir: smartmeter/cheriot
+            extra-config: --IPv6=n
       fail-fast: false
     runs-on: ubuntu-latest
     container:

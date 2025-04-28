@@ -1,0 +1,33 @@
+// Import everything from the environment
+import * as host from "./ffi.js"
+import * as sm   from "./smartmeter.js"
+
+const SENSOR_OFFSET_FINE = -120;
+const SENSOR_OFFSET_COARSE = -80;
+
+function run()
+{
+  // The device exposes the provider's rate schedule as an array to our
+  // capability register machine.  Have it land in register 1.
+  host.read_from_snapshot(host.DATA_PROVIDER_SCHEDULE_RATE_ARRAY, 1);
+  host.print("Rate array address ", host.get_address(1));
+
+  // In fact, the rate array is right next to the sensor data in memory.  We can
+  // verify that by asking the FFI for the sensor value (which will just have
+  // been snapshotted for us) as well as reading it from memory directly.
+  var ffi_sensor_value = host.read_from_snapshot(host.DATA_SENSOR_SAMPLE, 0);
+  var mem_sensor_value = host.load_int(1, SENSOR_OFFSET_FINE);
+  host.print("Sensor data: ", ffi_sensor_value, " ", mem_sensor_value);
+
+  // We can go further and scribble on sensor reports!  Choosing
+  // SENSOR_OFFSET_COARSE leaves the grid operator informed of the fine samples,
+  // but zeros out the provider's view.  Choose SENSOR_OFFSET_FINE to zero out
+  // both reports (because a coarsened constant zero is still zero).
+  for (let i = 0; i < 4; i++)
+  {
+    // Each store writes two words; register -1 always holds null (zero)
+    host.store(-1, 1, SENSOR_OFFSET_COARSE + i * 8);
+  }
+}
+
+vmExport(1234, run);
