@@ -67,4 +67,26 @@ curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
 sudo -E bash nodesource_setup.sh
 sudo apt-get install -y nodejs
 
-# Run up frontend server
+# Run up frontend server as per ../frontends/README.md
+npm install
+./node_modules/.bin/rollup --config ./static.in/user-editor.rollup-config.mjs
+node ./server.js
+
+# On MacOS
+brew install dnsmasq mosquitto ntp
+sudo /opt/homebrew/opt/dnsmasq/sbin/dnsmasq --keep-in-foreground -C dnsmasq.conf
+/opt/homebrew/opt/mosquitto/sbin/mosquitto -v -c mosquitto.conf
+sudo /opt/homebrew/sbin/ntpd -d -c ntp.conf
+picocom /dev/tty.usbserial-LN28282 -b 921600 --imap=lfcrlf
+# /etc/hosts
+10.0.0.10 cheriot.demo
+
+# Generating ssl cert. and bear SSL trust anchor header
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -days 3650 -nodes -keyout cheriot.demo.key -out cheriot.demo.crt -subj "/CN=cheriot.demo"
+brssl ta cheriot.demo.crt > cheriot/cheriot.demo.h
+
+# Buidling smartmeter/cheriot
+xmake config --sdk=~/llvm-project/Build/install --broker-host=cheriot.demo --broker-anchor=cheriot.demo.h --IPv6=n --unique-id=SCIHouse
+xmake
+xmake run
+
