@@ -62,14 +62,25 @@ static_assert(is_valid_id(MQTT_UNIQUE_ID));
 
 static void do_sntp()
 {
-	Timeout t{MS_TO_TICKS(5000)};
+	/*
+	 * The first time here is almost surely the first time the network stack
+	 * has been asked to send something.  Unless things change (see
+	 * https://github.com/FreeRTOS/FreeRTOS-Plus-TCP/issues/1244), it is going
+	 * to swallow our UDP datagrams while it figures out ARP.  Don't wait very
+	 * long the first time, or between attempts, but give subsequent attempts
+	 * longer to complete.
+	 *
+	 * But don't set the timeout too small, so that our periodic refreshes have
+	 * a chance of doing the right thing without retries.
+	 */
+	Timeout t{MS_TO_TICKS(1000)};
 
 	// SNTP must be run for the TLS stack to be able to check certificate dates.
 	while (sntp_update(&t) != 0)
 	{
 		Debug::log("Failed to update NTP time");
 
-		t = Timeout{MS_TO_TICKS(5000)};
+		t = Timeout{MS_TO_TICKS(1000)};
 		thread_sleep(&t, ThreadSleepNoEarlyWake);
 
 		t = Timeout{MS_TO_TICKS(5000)};
