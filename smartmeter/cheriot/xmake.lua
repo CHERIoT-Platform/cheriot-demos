@@ -10,6 +10,8 @@ set_toolchains("cheriot-clang")
 netdir = os.getenv("CHERIOT_NETWORK_STACK") or path.absolute("../../network-stack")
 includes(path.join(netdir, "lib"))
 
+local demodir = os.scriptdir()
+
 option("board")
   set_default("sonata-1.1")
 
@@ -25,6 +27,22 @@ option("unique-id")
 option("fake-sensor")
   set_default(false)
   add_defines("SMARTMETER_FAKE_UARTLESS_SENSOR")
+
+local demo_git_description = nil
+rule("smartmeter.git-description")
+	before_build_file(function(target, sourcefile, opt)
+		demo_git_description = demo_git_description or try {
+			function()
+				return os.iorunv("git", {"-C", demodir, "describe", "--always", "--dirty"}):gsub("[\r\n]", "")
+			end
+		}
+		demo_git_description = demo_git_description or "unknown"
+
+		local fileconfig = target:fileconfig(sourcefile) or {}
+		fileconfig.defines = fileconfig.defines or {}
+		table.insert(fileconfig.defines, ("DEMO_GIT_DESCRIPTION=%q"):format(demo_git_description))
+		target:fileconfig_set(sourcefile, fileconfig)
+	end)
 
 rule("smartmeter.mqtt")
   on_load(function (target)
@@ -49,6 +67,12 @@ compartment("housekeeping")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("housekeeping.cc")
+  add_files("housekeeping-version.cc",
+    { rules = { "cheriot.define-rtos-git-description"
+              , "cheriot.define-network-git-description"
+              , "smartmeter.git-description"
+              }
+    } )
 
   add_rules("cheriot.network-stack.ipv6", "housekeeping.unique-id")
 
@@ -121,6 +145,13 @@ compartment("monolith")
   add_includedirs(path.join(netdir,"include"))
 
   add_files("housekeeping.cc")
+  add_files("housekeeping-version.cc",
+    { rules = { "cheriot.define-rtos-git-description"
+              , "cheriot.define-network-git-description"
+              , "smartmeter.git-description"
+              }
+    } )
+
   add_files("sensor.cc")
   add_files("grid.cc")
   add_files("provider.cc")
