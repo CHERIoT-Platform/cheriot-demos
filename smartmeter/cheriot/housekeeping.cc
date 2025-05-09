@@ -120,7 +120,7 @@ const char *housekeeping_mqtt_unique_get()
 
 int housekeeping_entry()
 {
-	Debug::log("entry");
+	Debug::log("entry: {}", version_string());
 
 	Debug::log("Configuring pinmux");
 	auto pinSinks = MMIO_CAPABILITY(SonataPinmux::PinSinks, pinmux_pins_sinks);

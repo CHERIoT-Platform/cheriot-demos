@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <stdint.h>
 
+const char *version_string();
+
 /**
  * @defgroup entryvectors Compartment entry vectors
  * @{
