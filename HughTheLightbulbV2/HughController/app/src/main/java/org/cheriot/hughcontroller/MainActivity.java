@@ -1,9 +1,11 @@
 package org.cheriot.hughcontroller;
 
 import android.os.Bundle;
-import android.text.Editable;
 import android.view.*;
 import android.content.Intent;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,10 +13,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.textfield.TextInputEditText;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.skydoves.colorpickerview.ColorPickerView;
 import com.hivemq.client.mqtt.mqtt3.*;
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar;
 
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -25,16 +27,24 @@ import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 
 
-public class MainActivity extends AppCompatActivity implements android.view.View.OnClickListener, com.skydoves.colorpickerview.listeners.ColorEnvelopeListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, ColorEnvelopeListener, AdapterView.OnItemSelectedListener {
 
     String MQTTName;
     Mqtt3BlockingClient MQTTClient;
 
-    // Set to true to use the demo.cheriot.org MQTT server (may not be running!).
-    final boolean UseCHERIoTDemoServer = false;
-
     byte key[];
     final byte[] context = new byte[8];
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        android.util.Log.i("selected", "" + l);
+//        initialiseMQTT();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
+    }
 
     public interface Hydrogen extends Library {
         Hydrogen INSTANCE = (Hydrogen)
@@ -88,7 +98,8 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         super.onRestoreInstanceState(savedInstanceState);
         key = savedInstanceState.getByteArray("key");
         MQTTName = savedInstanceState.getString("topic");
-        initialiseMQTT();
+        if (MQTTName != null)
+            initialiseMQTT();
     }
 
     private void initialiseMQTT()
@@ -102,15 +113,27 @@ public class MainActivity extends AppCompatActivity implements android.view.View
                 clientID.append(ClientIdCharacters.charAt(rand.nextInt(ClientIdCharacters.length())));
             }
             android.util.Log.i("MQTT Client ID", clientID.toString());
-            String server = UseCHERIoTDemoServer ? "demo.cheriot.org" : "test.mosquitto.org";
-            int port = UseCHERIoTDemoServer ? 8883 : 8886;
-            MQTTClient = Mqtt3Client.builder()
+            Spinner serverSpinner = (Spinner) findViewById(R.id.serverSpinner);
+            String selectedServer = serverSpinner.getSelectedItem().toString();
+            String[] serverParts = selectedServer.split(":");
+            String server = serverParts[0];
+            int port = Integer.valueOf(serverParts[1]);
+            boolean use_ssl = port != 1883;
+
+            if (MQTTClient != null && MQTTClient.getState().isConnected()) {
+                android.util.Log.i("MQTT", "disconnecting");
+                MQTTClient.disconnect();
+            }
+
+            android.util.Log.i("MQTT", "Connecting to " + server + ":" + port);
+            Mqtt3ClientBuilder builder = Mqtt3Client.builder()
                     .serverHost(server)
-                    .serverPort(port)
-                    .sslWithDefaultConfig()
-                    .automaticReconnectWithDefaultConfig()
-                    .identifier(clientID.toString())
-                    .buildBlocking();
+                    .serverPort(port);
+                    if (use_ssl)
+                        builder = builder.sslWithDefaultConfig();
+            builder = builder.automaticReconnectWithDefaultConfig();
+            builder.identifier(clientID.toString());
+            MQTTClient = builder.buildBlocking();
             android.util.Log.i("MQTT Client connection", "Started");
             MQTTClient.connect();
             android.util.Log.i("MQTT Client connection", "Completed");
@@ -131,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements android.view.View
             return insets;
         });
 
-        initialiseMQTT();
+//        initialiseMQTT();
 
         android.widget.Button btnQRScan = findViewById(R.id.btnQRScan);
         btnQRScan.setOnClickListener(this);
@@ -139,10 +162,23 @@ public class MainActivity extends AppCompatActivity implements android.view.View
         android.widget.Button btnForgetKey = findViewById(R.id.btnForgetKey);
         btnForgetKey.setOnClickListener(this);
 
+        android.widget.Button btnConnect = findViewById(R.id.btnConnect);
+        btnConnect.setOnClickListener(this);
+
         ColorPickerView colourPicker = findViewById(R.id.colorPickerView);
         colourPicker.setColorListener(this);
         BrightnessSlideBar brightnessSlideBar = findViewById(R.id.brightnessSlide);
         colourPicker.attachBrightnessSlider(brightnessSlideBar);
+
+        Spinner serverSpinner = (Spinner) findViewById(R.id.serverSpinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.servers,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        serverSpinner.setAdapter(adapter);
+        serverSpinner.setOnItemSelectedListener(this);
     }
 
 
@@ -183,6 +219,8 @@ public class MainActivity extends AppCompatActivity implements android.view.View
             intentIntegrator.initiateScan();
         } else if (view.getId() == R.id.btnForgetKey) {
             key = new byte[32];
+        } else if (view.getId() == R.id.btnConnect) {
+            initialiseMQTT();
         }
     }
 

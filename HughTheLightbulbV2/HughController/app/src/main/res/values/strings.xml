@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Hugh Controller</string>
+    <string-array name="servers">
+        <item>test.mosquitto.org:8886</item>
+        <item>demo.cheriot.org:8883</item>
+        <item>10.0.0.10:1883</item>
+    </string-array>
 </resources>
