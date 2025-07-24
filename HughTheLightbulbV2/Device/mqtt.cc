@@ -15,14 +15,32 @@
 #include <sntp.h>
 #include <tick_macros.h>
 
-// Uncomment to use the demo.cheriot.org server instead of mosquitto.
-// This is faster (not rate limited) but might not be running.
-// #define CHERIOT_DEMO_SERVER 1
+// Permit statically selecting between three MQTT servers:
+// 1) test.mosquitto.org (public mosquitto.org server intended only for testing, rate limited and sometimes unreliable)
+// 2) demo.cheriot.org (cheriot.org server that is faster but may be turned off)
+// 3) cheriot.demo (a non-standard TLD used only with local server setup)
 
-#ifdef CHERIOT_DEMO_SERVER
-#	include "letsencrypt.h"
-#else
+#define MOSQUITTO_ORG 1
+#define DEMO_CHERIOT_ORG 2
+#define CHERIOT_DEMO 3
+
+// Uncomment one of these lines to select the server used
+#define MQTT_SERVER MOSQUITTO_ORG
+// #define MQTT_SERVER DEMO_CHERIOT_ORG
+// #define MQTT_SERVER CHERIOT_DEMO
+
+// Include the relevant trust anchor for the selected server
+#if MQTT_SERVER == MOSQUITTO_ORG
 #	include "mosquitto.org.h"
+#define MQTT_SERVER_NAME "test.mosquitto.org"
+#elif MQTT_SERVER == DEMO_CHERIOT_ORG
+#	include "letsencrypt.h"
+#define MQTT_SERVER_NAME "demo.cheriot.org"
+#elif MQTT_SERVER == CHERIOT_DEMO
+#include "cheriot.demo.h"
+#define MQTT_SERVER_NAME "cheriot.demo"
+#else
+#	error "unknown MQTT_SERVER"
 #endif
 
 using CHERI::Capability;
@@ -47,11 +65,7 @@ constexpr const size_t outgoingPublishCount = 20;
 // MQTT test broker: https://test.mosquitto.org/
 // Note: port 8883 is encrypted and unauthenticated
 DECLARE_AND_DEFINE_CONNECTION_CAPABILITY(MQTTServerCapability,
-#ifdef CHERIOT_DEMO_SERVER
-                                         "demo.cheriot.org",
-#else
-                                         "test.mosquitto.org",
-#endif
+                                         MQTT_SERVER_NAME,
                                          8883,
                                          ConnectionTypeTCP);
 
@@ -185,7 +199,7 @@ void __cheri_compartment("hugh_network") run()
 		mqtt_generate_client_id(clientID.data() + clientIDPrefix.size(),
 		                        clientID.size() - clientIDPrefix.size());
 
-		Debug::log("Connecting to MQTT broker...");
+		Debug::log("Connecting to MQTT broker {}...", MQTT_SERVER_NAME);
 
 		t           = UnlimitedTimeout;
 		auto handle = mqtt_connect(&t,
