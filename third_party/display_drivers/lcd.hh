@@ -100,4 +100,5 @@ class SonataLcd
 	void fill_rect(Rect rect, Color color);
 	void
 	draw_str(Point point, const char *str, Color background, Color foreground);
+	void set_brightness(uint8_t brightness);
 };
