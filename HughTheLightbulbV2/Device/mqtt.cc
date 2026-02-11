@@ -189,6 +189,7 @@ void __cheri_compartment("hugh_network") run()
 		}
 	}
 
+	uint64_t earliest_reconnect = 0;
 	while (true)
 	{
 		status_leds()->led_off(3);
@@ -200,9 +201,22 @@ void __cheri_compartment("hugh_network") run()
 		mqtt_generate_client_id(clientID.data() + clientIDPrefix.size(),
 		                        clientID.size() - clientIDPrefix.size());
 
+		// limit connection attempts to at most once per second
+		uint64_t now = rdcycle64();
+		if (now < earliest_reconnect)
+		{
+			Debug::log("Rate limiting connection attempts.");
+			// wait until earliest_reconnect attempt
+			// we might overshoot slightly if we get preempted)
+			// or undershoot if the divide rounds down, but neither matters
+			thread_millisecond_wait(1000*(earliest_reconnect - now) / CPU_TIMER_HZ);
+			now = rdcycle64();
+		}
+		earliest_reconnect = now + CPU_TIMER_HZ;
+
 		Debug::log("Connecting to MQTT broker {}...", MQTT_SERVER_NAME);
 
-		t           = UnlimitedTimeout;
+		t           = MS_TO_TICKS(60000);
 		auto handle = mqtt_connect(&t,
 		                           STATIC_SEALED_VALUE(mqttMalloc),
 		                           CONNECTION_CAPABILITY(MQTTServerCapability),
