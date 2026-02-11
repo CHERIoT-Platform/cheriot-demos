@@ -14,6 +14,7 @@
 #include <platform-rgbctrl.hh>
 #include <sntp.h>
 #include <tick_macros.h>
+#include <allocator.h>
 
 // Permit statically selecting between three MQTT servers:
 // 1) test.mosquitto.org (public mosquitto.org server intended only for testing, rate limited and sometimes unreliable)

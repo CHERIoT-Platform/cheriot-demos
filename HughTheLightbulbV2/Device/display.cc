@@ -1,5 +1,6 @@
 #include "interface.hh"
 #include <NetAPI.h>
+#include <allocator.h>
 #include <debug.hh>
 #include <fail-simulator-on-error.h>
 #include <stdint.h>
