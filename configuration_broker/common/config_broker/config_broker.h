@@ -34,12 +34,12 @@ typedef CHERI_SEALED(struct ConfigToken *) ConfigCapability;
  * Macros to create and use a Sealed Capability to read a config item
  */
 #define DEFINE_READ_CONFIG_CAPABILITY(name)                                    \
-                                                                               \
+	struct ReadConfigCapability##name {                                        \
+		const char Name[sizeof(name)];                                         \
+	};                                                                         \
 	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE_EXPLICIT_TYPE(                      \
-	  struct {                                                                 \
-		  const char Name[sizeof(name)];                                       \
-	  },                                                                       \
-	  struct ConfigName,                                                    \
+	  struct ReadConfigCapability##name,                                       \
+	  struct ConfigName,                                                       \
 	  config_broker,                                                           \
 	  ReadConfigKey,                                                           \
 	  __read_config_capability_##name,                                         \
@@ -52,12 +52,12 @@ typedef CHERI_SEALED(struct ConfigToken *) ConfigCapability;
  * Macros to create and use a Sealed Capability to write a config item
  */
 #define DEFINE_WRITE_CONFIG_CAPABILITY(name)                                   \
-                                                                               \
+	struct WriteConfigCapability##name {                                       \
+		const char Name[sizeof(name)];                                         \
+	};                                                                         \
 	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE_EXPLICIT_TYPE(                      \
-	  struct {                                                                 \
-		  const char Name[sizeof(name)];                                       \
-	  },                                                                       \
-	  struct ConfigName,                                                        \
+	  struct WriteConfigCapability##name,                                      \
+	  struct ConfigName,                                                       \
 	  config_broker,                                                           \
 	  WriteConfigKey,                                                          \
 	  __write_config_capability_##name,                                        \
@@ -71,14 +71,14 @@ typedef CHERI_SEALED(struct ConfigToken *) ConfigCapability;
  * and properties for a config item
  */
 #define DEFINE_PARSER_CONFIG_CAPABILITY(name, Size, UpdateInterval)            \
-                                                                               \
+	struct ParserConfigCapability##name {                                      \
+		size_t     size;                                                       \
+		uint32_t   update_interval;                                            \
+		const char Name[sizeof(name)];                                         \
+	};                                                                         \
 	DECLARE_AND_DEFINE_STATIC_SEALED_VALUE_EXPLICIT_TYPE(                      \
-	  struct {                                                                 \
-		  size_t     size;                                                     \
-		  uint32_t   update_interval;                                          \
-		  const char Name[sizeof(name)];                                       \
-	  },                                                                       \
-	  struct ConfigToken,                                                        \
+	  struct ParserConfigCapability##name,                                     \
+	  struct ConfigToken,                                                      \
 	  config_broker,                                                           \
 	  ParserConfigKey,                                                         \
 	  __parser_config_capability_##name,                                       \
