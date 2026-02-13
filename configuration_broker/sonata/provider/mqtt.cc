@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include <NetAPI.h>
+#include <allocator.h>
 #include <cstdlib>
 #include <debug.hh>
 #include <errno.h>

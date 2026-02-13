@@ -3,6 +3,7 @@
 #include "default-javascript.h"
 #include "microvium-ffi.hh"
 #include "secret.h"
+#include <allocator.h>
 #include <locks.hh>
 
 DECLARE_AND_DEFINE_ALLOCATOR_CAPABILITY(JavaScriptMallocCapability, 8192);

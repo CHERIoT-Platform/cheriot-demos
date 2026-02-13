@@ -1,6 +1,7 @@
 // Copyright Configured Things and CHERIoT Contributors.
 // SPDX-License-Identifier: MIT
 
+#include <allocator.h>
 #include <compartment.h>
 #include <cstdlib>
 #include <debug.hh>
