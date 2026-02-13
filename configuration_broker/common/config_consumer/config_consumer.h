@@ -23,6 +23,6 @@ namespace ConfigConsumer
 
 	// Method call by a thread to wait for and process updates
 	// to configurtion items
-	void __cheri_libcall run(ConfigItem configItems[], size_t numOfItems, uint16_t maxTimeouts=0);
+	void __cheri_libcall run(AllocatorCapability allocator_capability, ConfigItem configItems[], size_t numOfItems, uint16_t maxTimeouts=0);
 
 } // namespace ConfigConsumer

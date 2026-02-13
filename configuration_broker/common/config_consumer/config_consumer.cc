@@ -25,7 +25,8 @@ namespace ConfigConsumer
 	 * or more configuration values and then calls the
 	 * appropriate handler.
 	 */
-	void __cheri_libcall run(ConfigItem configItems[],
+	void __cheri_libcall run(AllocatorCapability allocator_capability,
+							 ConfigItem configItems[],
 	                         size_t     numOfItems,
 	                         uint16_t   maxTimeouts)
 	{
@@ -36,7 +37,7 @@ namespace ConfigConsumer
 		// Create the multi waiter
 		MultiWaiter mw = nullptr;
 		Timeout             t1{MS_TO_TICKS(1000)};
-		multiwaiter_create(&t1, MALLOC_CAPABILITY, &mw, numOfItems);
+		multiwaiter_create(&t1, allocator_capability, &mw, numOfItems);
 		if (mw == nullptr)
 		{
 			Debug::log("thread {} failed to create multiwaiter",

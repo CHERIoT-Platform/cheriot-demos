@@ -115,5 +115,5 @@ void __cheri_compartment("consumer2") init()
 
 	size_t numOfItems = sizeof(configItems) / sizeof(configItems[0]);
 
-	ConfigConsumer::run(configItems, numOfItems, MAX_CONFIG_TIMEOUTS);
+	ConfigConsumer::run(MALLOC_CAPABILITY, configItems, numOfItems, MAX_CONFIG_TIMEOUTS);
 }
