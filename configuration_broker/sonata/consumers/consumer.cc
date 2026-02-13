@@ -206,7 +206,7 @@ void __cheri_compartment("consumers") init()
 
 	while (true)
 	{
-		on_error([&]() { ConfigConsumer::run(configItems, numOfItems); },
+		on_error([&]() { ConfigConsumer::run(MALLOC_CAPABILITY, configItems, numOfItems); },
 		         [&]() { Debug::log("Unexpected error in Consumer"); });
 	}
 }

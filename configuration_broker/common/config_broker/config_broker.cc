@@ -57,7 +57,7 @@ namespace
 	/**
 	 * Unseal a ConfigName (i.e. Read or Write) capability.
 	 */
-	 ConfigName *name_capability_unseal(CHERI_SEALED(ConfigName *) sealedCap, SKey key)
+	 ConfigName *name_capability_unseal(CHERI_SEALED(ConfigName *) sealedCap, TokenKey key)
 	 {
 		 auto token = token_unseal(key, Sealed{sealedCap});
  
@@ -76,7 +76,7 @@ namespace
 	/**
 	 * Unseal a config capability.
 	 */
-	ConfigToken *config_capability_unseal(ConfigCapability sealedCap, SKey key)
+	ConfigToken *config_capability_unseal(ConfigCapability sealedCap, TokenKey key)
 	{
 		ConfigToken *token = token_unseal(key, Sealed<ConfigToken>{sealedCap});
 

@@ -31,6 +31,7 @@
  */
 #define MALLOC_QUOTA 200
 
+#include <allocator.h>
 #include <compartment.h>
 #include <cstdlib>
 #include <debug.hh>

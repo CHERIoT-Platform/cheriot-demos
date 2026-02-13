@@ -78,6 +78,11 @@ void lcd_destroy(LCD_Interface *lcdIntf, St7735Context *ctx)
 	pwm_bl()->output_set(/*period=*/0, /*duty_cycle=*/0);
 }
 
+void SonataLcd::set_brightness(uint8_t brightness)
+{
+	pwm_bl()->output_set(255, brightness);
+}
+
 void SonataLcd::clean()
 {
 	// Clean the display with a white rectangle.

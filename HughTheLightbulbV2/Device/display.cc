@@ -1,5 +1,6 @@
 #include "interface.hh"
 #include <NetAPI.h>
+#include <allocator.h>
 #include <debug.hh>
 #include <fail-simulator-on-error.h>
 #include <stdint.h>
@@ -83,7 +84,7 @@ void __cheri_compartment("display") graphs()
 	bool lastButtonValue = false;
 	int  faults          = 0;
 	bool showQRCode      = false;
-
+	uint8_t brightness = 128;
 	while (true)
 	{
 		bool newShowQRCode = switches()->read_switch(7);
@@ -133,19 +134,31 @@ void __cheri_compartment("display") graphs()
 				                 ? Color::Red
 				                 : Color::Green));
 			}
-			bool buttonValue = switches()->read_joystick().is_pressed();
+			auto buttonValue = switches()->read_joystick();
 			if (buttonValue != lastButtonValue)
 			{
 				Debug::log("Button value changed from {} to {}",
 				           lastButtonValue,
 				           buttonValue);
 				lastButtonValue = buttonValue;
-				if (buttonValue)
+				if (buttonValue.is_pressed())
 				{
 					Debug::log("Injecting fault");
 					network_inject_fault();
 					faults++;
 					Debug::log("Faults: {}", faults);
+				}
+				if (buttonValue.is_up())
+				{
+					brightness += 16;
+					Debug::log("Increasing brightness to {}", brightness);
+					lcd.set_brightness(brightness);
+				}
+				if (buttonValue.is_down())
+				{
+					brightness -= 16;
+					Debug::log("Decreasing brightness to {}", brightness);
+					lcd.set_brightness(brightness);
 				}
 			}
 		}

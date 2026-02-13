@@ -1,6 +1,7 @@
 // Copyright Configured Things and CHERIoT Contributors.
 // SPDX-License-Identifier: MIT
 
+#include <allocator.h>
 #include <compartment.h>
 #include <cstdint>
 #include <cstdlib>
@@ -113,5 +114,5 @@ void __cheri_compartment("consumer1") init()
 
 	size_t numOfItems = sizeof(configItems) / sizeof(configItems[0]);
 
-	ConfigConsumer::run(configItems, numOfItems, MAX_CONFIG_TIMEOUTS);
+	ConfigConsumer::run(MALLOC_CAPABILITY, configItems, numOfItems, MAX_CONFIG_TIMEOUTS);
 }
