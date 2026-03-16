@@ -12,6 +12,7 @@
 #include <platform-rgbctrl.hh>
 #include <sntp.h>
 #include <tick_macros.h>
+#include <allocator.h>
 
 #include "../../third_party/display_drivers/lcd.hh"
 

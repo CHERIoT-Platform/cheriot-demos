@@ -4,6 +4,7 @@
 #include "microvium-ffi.hh"
 #include "secret.h"
 #include <locks.hh>
+#include <allocator.h>
 
 DECLARE_AND_DEFINE_ALLOCATOR_CAPABILITY(JavaScriptMallocCapability, 8192);
 #define JAVASCRIPT_MALLOC STATIC_SEALED_VALUE(JavaScriptMallocCapability)

@@ -14,6 +14,7 @@
 #include <platform-rgbctrl.hh>
 #include <sntp.h>
 #include <tick_macros.h>
+#include <allocator.h>
 
 // Uncomment to use the demo.cheriot.org server instead of mosquitto.
 // This is faster (not rate limited) but might not be running.

@@ -4,6 +4,7 @@
 #include <fail-simulator-on-error.h>
 #include <stdint.h>
 #include <vector>
+#include <allocator.h>
 
 #include "../../third_party/QRCode/qrcode.h"
 #include "../../third_party/display_drivers/lcd.hh"
